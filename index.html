@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConsegSequro 360 - Inteligência Patrimonial</title>
+    <meta name="description" content="Plataforma estratégica de blindagem patrimonial e sucessão.">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;600;700;900&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'cosmic': '#020617', // Deepest Slate
+                        'cosmic-light': '#1E293B', // Slate 800
+                        'magic-blue': '#00BFFF', // Deep Sky Blue
+                        'power-blue': '#1E90FF', // Dodger Blue
+                        'electric-blue': '#38BDF8', // Sky 400
+                        'soft-blue': '#F0F9FF', // Sky 50
+                        'glass-border': 'rgba(255, 255, 255, 0.1)',
+                        'glass-surface': 'rgba(255, 255, 255, 0.7)',
+                    },
+                    fontFamily: {
+                        'orbitron': ['Orbitron', 'sans-serif'],
+                        'inter': ['Inter', 'sans-serif']
+                    },
+                    boxShadow: {
+                        'glow': '0 0 20px -5px rgba(0, 191, 255, 0.5)',
+                        'glow-strong': '0 0 40px -10px rgba(0, 191, 255, 0.7)',
+                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
+                        'card': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                    },
+                    backgroundImage: {
+                        'grid-pattern': "linear-gradient(to right, rgba(226, 232, 240, 0.3) 1px, transparent 1px), linear-gradient(to bottom, rgba(226, 232, 240, 0.3) 1px, transparent 1px)",
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #F8FAFC;
+            color: #0F172A;
+            overflow-x: hidden;
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+        }
+        .tech-grid {
+            background-size: 40px 40px;
+            mask-image: linear-gradient(to bottom, transparent, 5%, black, 95%, transparent);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .animate-float {
+            animation: float 6s ease-in-out infinite;
+        }
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "firebase/": "https://aistudiocdn.com/firebase@^12.6.0/",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
+  }
+}
+</script>
+<!-- Google API Script -->
+<script src="https://apis.google.com/js/api.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+</body>
+</html>
