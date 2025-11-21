@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from './Button';
 import { db, collection, addDoc, serverTimestamp, storage, ref, uploadBytes, getDownloadURL } from '../services/firebaseService';
 import { LeadData } from '../types';
@@ -13,6 +13,14 @@ export const ContactForm: React.FC<ContactFormProps> = ({ initialProduct = '' })
     const [files, setFiles] = useState<FileList | null>(null);
     const [emailError, setEmailError] = useState('');
     const formRef = useRef<HTMLFormElement>(null);
+    const [selectedProduct, setSelectedProduct] = useState(initialProduct);
+
+    // Update internal state when prop changes to allow external triggers
+    useEffect(() => {
+        if (initialProduct) {
+            setSelectedProduct(initialProduct);
+        }
+    }, [initialProduct]);
 
     const validateEmail = (email: string) => {
         const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -73,6 +81,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({ initialProduct = '' })
             setStatus('success');
             formRef.current.reset();
             setFiles(null);
+            setSelectedProduct('');
 
         } catch (error) {
             console.error("Error submitting form:", error);
@@ -142,7 +151,8 @@ export const ContactForm: React.FC<ContactFormProps> = ({ initialProduct = '' })
                         <select 
                             name="produto" 
                             id="produto" 
-                            defaultValue={initialProduct}
+                            value={selectedProduct}
+                            onChange={(e) => setSelectedProduct(e.target.value)}
                             className="w-full px-4 py-3 rounded-lg bg-slate-50 border border-slate-200 focus:border-magic-blue focus:ring-2 focus:ring-magic-blue/20 outline-none transition-all appearance-none cursor-pointer"
                         >
                             <option value="">Selecione a estratégia...</option>
@@ -191,7 +201,7 @@ export const ContactForm: React.FC<ContactFormProps> = ({ initialProduct = '' })
             </div>
 
             {status === 'error' && (
-                <div className="flex items-center text-red-500 text-sm bg-red-50 p-3 rounded-lg">
+                <div className="flex items-center text-red-500 text-xs bg-red-50 p-3 rounded-lg">
                     <AlertCircle className="w-4 h-4 mr-2" />
                     Erro ao processar solicitação. Verifique sua conexão.
                 </div>

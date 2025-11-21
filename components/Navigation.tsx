@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { RouteName } from '../types';
-import { Menu, X, Lock, LayoutDashboard } from 'lucide-react';
+import { Menu, X, Lock } from 'lucide-react';
 
 interface NavigationProps {
     currentRoute: RouteName;
@@ -38,7 +38,7 @@ export const Navigation: React.FC<NavigationProps> = ({ currentRoute, onNavigate
                         onClick={() => handleNavClick('inicio')}
                     >
                         <span className="font-orbitron text-2xl font-bold text-cosmic group-hover:text-magic-blue transition-colors duration-300">
-                            ConsegSeguro<span className="text-magic-blue">360</span>
+                            ConsegSeguro
                         </span>
                     </div>
 

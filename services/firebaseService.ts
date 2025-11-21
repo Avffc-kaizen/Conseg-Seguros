@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { getFirestore, collection, addDoc, serverTimestamp, doc, updateDoc } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth";
 
@@ -36,6 +36,8 @@ export {
     collection, 
     addDoc, 
     serverTimestamp, 
+    doc,
+    updateDoc,
     ref, 
     uploadBytes, 
     getDownloadURL,
