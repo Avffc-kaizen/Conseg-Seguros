@@ -1,9 +1,11 @@
+
 import { initializeApp } from "firebase/app";
-import { getFirestore, collection, addDoc, serverTimestamp, doc, updateDoc } from "firebase/firestore";
+import { getAnalytics } from "firebase/analytics";
+import { getFirestore, collection, addDoc, serverTimestamp, doc, updateDoc, query, orderBy, onSnapshot } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "firebase/auth";
 
-// Configuração original do cliente
+// Configuração do cliente ConsegSeguro
 const firebaseConfig = {
   apiKey: "AIzaSyDKJJYrQwWH7R-KeMzdxUbgpgxfZ4yhpi8",
   authDomain: "consegseguro-25a80.firebaseapp.com",
@@ -15,21 +17,26 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
+let app: any;
+let analytics: any;
 let db: any;
 let storage: any;
 let auth: any;
 
 try {
-    const app = initializeApp(firebaseConfig);
+    app = initializeApp(firebaseConfig);
+    analytics = getAnalytics(app);
     db = getFirestore(app);
     storage = getStorage(app);
     auth = getAuth(app);
-    console.log("Firebase Service Initialized");
+    console.log("Firebase Service Initialized with Analytics");
 } catch (error) {
     console.error("Firebase Initialization Error:", error);
 }
 
 export { 
+    app,
+    analytics,
     db, 
     storage, 
     auth, 
@@ -38,6 +45,9 @@ export {
     serverTimestamp, 
     doc,
     updateDoc,
+    query,
+    orderBy,
+    onSnapshot,
     ref, 
     uploadBytes, 
     getDownloadURL,

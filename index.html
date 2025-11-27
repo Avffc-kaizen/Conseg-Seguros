@@ -1,44 +1,68 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-br" class="scroll-smooth">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ConsegSeguro - Inteligência Patrimonial</title>
-    <meta name="description" content="Plataforma estratégica de blindagem patrimonial e sucessão.">
+    <title>ConsegSeguro | Inteligência e Blindagem Patrimonial</title>
     
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Proteja seu legado com a ConsegSeguro. Especialistas em blindagem patrimonial, sucessão empresarial, holding familiar, seguros de vida high-ticket e investimentos estratégicos.">
+    <meta name="keywords" content="seguro de vida, blindagem patrimonial, sucessão empresarial, consórcio, seguro saúde premium, investimentos, private insurance, wealth management, family office">
+    <meta name="author" content="ConsegSeguro Private">
+    <meta name="robots" content="index, follow">
+    <meta name="theme-color" content="#0F2A4A">
+    <meta name="geo.region" content="BR-SP">
+    <meta name="geo.placename" content="São Paulo">
+
+    <!-- Open Graph / Facebook / WhatsApp -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://consegseguro.com/">
+    <meta property="og:title" content="ConsegSeguro - Inteligência Patrimonial">
+    <meta property="og:description" content="Uma fusão entre alta tecnologia preditiva e a sutileza do toque humano para proteger seu futuro.">
+    <meta property="og:image" content="https://consegseguro.com/og-image.jpg">
+    <meta property="og:locale" content="pt_BR">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://consegseguro.com/">
+    <meta property="twitter:title" content="ConsegSeguro - Inteligência Patrimonial">
+    <meta property="twitter:description" content="Proteção de legado e ativos com inteligência estratégica.">
+
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Orbitron:wght@500;600;700;900&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
 
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS (CDN mantido para simplicidade no deploy atual) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             theme: {
                 extend: {
                     colors: {
-                        'cosmic': '#020617', // Deepest Slate
-                        'cosmic-light': '#1E293B', // Slate 800
-                        'magic-blue': '#00BFFF', // Deep Sky Blue
-                        'power-blue': '#1E90FF', // Dodger Blue
-                        'electric-blue': '#38BDF8', // Sky 400
-                        'soft-blue': '#F0F9FF', // Sky 50
-                        'glass-border': 'rgba(255, 255, 255, 0.1)',
-                        'glass-surface': 'rgba(255, 255, 255, 0.7)',
+                        'trust-blue': '#0F2A4A', // Deep Navy (Trust)
+                        'trust-light': '#2C4B70', // Lighter Navy
+                        'warm-gold': '#C5A059', // Premium Gold
+                        'soft-gold': '#F3E5C8', // Light Gold Background
+                        'civil-white': '#F9FAFB', // Off-white
+                        'magic-blue': '#3B82F6', // Tech accent (kept but softened usage)
+                        'cosmic': '#0F172A', // Keep for dark text
                     },
                     fontFamily: {
                         'orbitron': ['Orbitron', 'sans-serif'],
-                        'inter': ['Inter', 'sans-serif']
+                        'inter': ['Inter', 'sans-serif'],
+                        'serif': ['Playfair Display', 'serif'],
                     },
                     boxShadow: {
-                        'glow': '0 0 20px -5px rgba(0, 191, 255, 0.5)',
-                        'glow-strong': '0 0 40px -10px rgba(0, 191, 255, 0.7)',
-                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.07)',
-                        'card': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                        'glow': '0 0 25px rgba(59, 130, 246, 0.5)',
+                        'premium': '0 30px 60px -12px rgba(15, 42, 74, 0.2)',
+                        'glass': '0 8px 32px 0 rgba(31, 38, 135, 0.1)',
                     },
                     backgroundImage: {
-                        'grid-pattern': "linear-gradient(to right, rgba(226, 232, 240, 0.3) 1px, transparent 1px), linear-gradient(to bottom, rgba(226, 232, 240, 0.3) 1px, transparent 1px)",
+                        'gradient-trust': 'linear-gradient(135deg, #0F2A4A 0%, #1E3A8A 100%)',
+                        'gradient-gold': 'linear-gradient(135deg, #C5A059 0%, #D4AF37 100%)',
+                        'gradient-deep': 'radial-gradient(circle at center, #1E3A8A 0%, #0F2A4A 100%)',
+                        'neural': 'radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%)',
                     }
                 }
             }
@@ -47,27 +71,36 @@
     <style>
         body {
             background-color: #F8FAFC;
-            color: #0F172A;
+            color: #1e293b;
             overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
+        
+        /* Premium Slim Scrollbar */
+        ::-webkit-scrollbar {
+            width: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 20px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+
+        /* Animations */
         .animate-fade-in {
             animation: fadeIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.8);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
-        }
-        .tech-grid {
-            background-size: 40px 40px;
-            mask-image: linear-gradient(to bottom, transparent, 5%, black, 95%, transparent);
-        }
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        
         @keyframes float {
             0% { transform: translateY(0px); }
             50% { transform: translateY(-10px); }
@@ -76,25 +109,48 @@
         .animate-float {
             animation: float 6s ease-in-out infinite;
         }
-        .perspective-1000 {
-            perspective: 1000px;
+
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.2); }
+            50% { box-shadow: 0 0 35px rgba(59, 130, 246, 0.5); }
+        }
+        
+        /* Glassmorphism Utilities */
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+        }
+        
+        /* Utilities for text selection */
+        ::selection {
+            background: #0F2A4A;
+            color: #ffffff;
         }
     </style>
+    <!-- Google API Script -->
+    <script src="https://apis.google.com/js/api.js"></script>
 <script type="importmap">
 {
   "imports": {
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "react": "https://aistudiocdn.com/react@^19.2.0",
     "firebase/": "https://aistudiocdn.com/firebase@^12.6.0/",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/"
+    "path": "https://aistudiocdn.com/path@^0.12.7",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
+    "vite": "https://aistudiocdn.com/vite@^7.2.4",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.554.0",
+    "url": "https://aistudiocdn.com/url@^0.11.4"
   }
 }
 </script>
-<!-- Google API Script -->
-<script src="https://apis.google.com/js/api.js"></script>
 </head>
 <body>
     <div id="root"></div>
+    <!-- Ponto de entrada do Vite -->
+    <script type="module" src="/index.tsx"></script>
 </body>
 </html>

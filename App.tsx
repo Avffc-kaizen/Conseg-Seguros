@@ -1,246 +1,330 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useRef } from 'react';
 import { Navigation } from './components/Navigation';
-import { VideoPlayer } from './components/VideoPlayer';
 import { Button } from './components/Button';
+import { ContactForm } from './components/ContactForm';
 import { SectionWrapper } from './pages/SectionWrapper';
-import { Login } from './components/Login';
-import { BrokerDashboard } from './components/BrokerDashboard';
-import { RouteName, UserRole } from './types';
-import { Shield, TrendingUp, Lock, Zap, ArrowRight, Mail, Heart, Crown, BarChart3, Target, ShieldCheck, Database, Network, BrainCircuit, Layers, Fingerprint, RefreshCw, MessageCircle, ExternalLink, ChevronRight, Terminal, Cpu, CheckCircle, Wallet, Activity } from 'lucide-react';
-import { auth, onAuthStateChanged } from './services/firebaseService';
+import { BannerGenerator } from './components/BannerGenerator';
+import { RouteName } from './types';
+import { 
+    ShieldCheck, Heart, ArrowRight, Send, Share2, X, 
+    Bot, CheckCircle, Car, Home, TrendingUp, Umbrella, Briefcase,
+    AlertTriangle, ThumbsUp, Star, Phone, ExternalLink, MessageCircle, Link as LinkIcon, Check, Instagram, Stethoscope, Building2
+} from 'lucide-react';
 
-const NeuralDiagnostic = ({ onComplete }: { onComplete?: (system: string) => void }) => {
+// --- DADOS DE CONTATO ---
+const CONTACT_PHONE_DISPLAY = "+55 (61) 99994-9724";
+const CONTACT_WHATSAPP_LINK = "https://wa.me/5561999949724";
+const CONTACT_EMAIL = "Consegcn@terra.com.br";
+const CONTACT_ADDRESS = "Rua das Carnaúbas, Lotes 4, Sala 403 - Ed. Plaza Mall";
+const CONTACT_INSTAGRAM = "https://www.instagram.com/consegseguro";
+
+// --- LINKS EXTERNOS DOS SISTEMAS ---
+const LINK_SISTEMA_LEGADO = "https://vida.consegseguro.com/";
+const LINK_SISTEMA_CONSORCIO = "https://consorcio.consegseguro.com/";
+
+// --- CONSTANTES DE LOGOS ---
+const INSURERS = [
+    { name: 'Amil', url: 'https://logo.clearbit.com/amil.com.br' },
+    { name: 'Allianz', url: 'https://logo.clearbit.com/allianz.com.br' },
+    { name: 'Zurich', url: 'https://logo.clearbit.com/zurich.com.br' },
+    { name: 'Suhai', url: 'https://logo.clearbit.com/suhaiseguradora.com' },
+    { name: 'Sura', url: 'https://logo.clearbit.com/segurossura.com.br' },
+    { name: 'Yelum', url: 'https://yt3.googleusercontent.com/v3YtjpR4rHO_s2I9Up9pgs9O8vXgUqjHk9X3H5l5q5J3j5K5h5o5_5p5q5r5s5t5u5v5w5x5y5z5' }, 
+    { name: 'Porto Seguro', url: 'https://logo.clearbit.com/portoseguro.com.br' },
+    { name: 'Bradesco', url: 'https://logo.clearbit.com/bradescoseguros.com.br' },
+    { name: 'SulAmérica', url: 'https://logo.clearbit.com/sulamerica.com.br' },
+    { name: 'Tokio Marine', url: 'https://logo.clearbit.com/tokiomarine.com.br' },
+    { name: 'Mapfre', url: 'https://logo.clearbit.com/mapfre.com.br' },
+    { name: 'HDI', url: 'https://logo.clearbit.com/hdiseguros.com.br' },
+    { name: 'Sompo', url: 'https://logo.clearbit.com/sompo.com.br' },
+];
+
+// --- SISTEMA DE CHAT SIMPLIFICADO ---
+interface Message {
+    id: string;
+    text: string;
+    sender: 'bot' | 'user';
+    action?: {
+        label: string;
+        route?: RouteName;
+        link?: string;
+    };
+}
+
+const SentinelChat = ({ onNavigate }: { onNavigate: (route: RouteName) => void }) => {
+    const [isOpen, setIsOpen] = useState(false);
     const [input, setInput] = useState('');
-    const [stage, setStage] = useState<'idle' | 'analyzing' | 'result'>('idle');
-    const [suggestion, setSuggestion] = useState<{ name: string, id: string, reason: string, active: boolean } | null>(null);
-    const [terminalLines, setTerminalLines] = useState<string[]>([]);
+    const [isTyping, setIsTyping] = useState(false);
+    const [messages, setMessages] = useState<Message[]>([
+        { 
+            id: '1', 
+            text: "Olá! Sou o assistente da Conseg. Como posso ajudar a proteger seu patrimônio hoje?", 
+            sender: 'bot' 
+        },
+        { 
+            id: '2', 
+            text: "Posso te orientar sobre Seguro de Vida (Legado), Proteção Veicular, Saúde ou Investimento via Consórcio.", 
+            sender: 'bot' 
+        }
+    ]);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    const addLine = (text: string) => {
-        setTerminalLines(prev => [...prev.slice(-6), text]);
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
 
-    const analyzeContext = () => {
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages, isOpen]);
+
+    const analyzeRequest = (text: string) => {
+        const lowerText = text.toLowerCase();
+        
+        if (lowerText.includes('vida') || lowerText.includes('morre') || lowerText.includes('familia') || lowerText.includes('filho') || lowerText.includes('sucessao') || lowerText.includes('patrimonio')) {
+            return {
+                response: "Garantir a segurança financeira da sua família é o nosso propósito. Com o Seguro de Vida, você blinda seu patrimônio e garante o futuro de quem ama.",
+                action: { label: "Simular Legado", link: LINK_SISTEMA_LEGADO }
+            };
+        }
+        
+        if (lowerText.includes('carro') || lowerText.includes('moto') || lowerText.includes('bate') || lowerText.includes('roubo') || lowerText.includes('veiculo')) {
+            return {
+                response: "Seu veículo é uma conquista e merece proteção completa. Vamos cotar agora as melhores opções para sua mobilidade.",
+                action: { label: "Ver Seguro Auto", route: 'auto' as RouteName }
+            };
+        }
+
+        if (lowerText.includes('casa') || lowerText.includes('invest') || lowerText.includes('consorcio') || lowerText.includes('juro') || lowerText.includes('construir')) {
+            return {
+                response: "Investir com inteligência é não pagar juros. O consórcio é a estratégia ideal para ampliar seu patrimônio imobiliário ou renovar sua frota.",
+                action: { label: "Simular Consórcio", link: LINK_SISTEMA_CONSORCIO }
+            };
+        }
+
+        if (lowerText.includes('saude') || lowerText.includes('medico') || lowerText.includes('hospit') || lowerText.includes('convenio')) {
+            return {
+                response: "Sua saúde é seu bem mais valioso. Trabalhamos com a rede premium (Bradesco, Amil, SulAmérica) para garantir o melhor atendimento.",
+                action: { label: "Ver Planos de Saúde", route: 'saude' as RouteName }
+            };
+        }
+
+        return {
+            response: "Entendi perfeitamente. Para essa questão específica, vou conectar você diretamente com um de nossos consultores especialistas no WhatsApp.",
+            action: { label: "Chamar no WhatsApp", route: 'contato' as RouteName }
+        };
+    };
+
+    const handleSend = async () => {
+        if (!input.trim()) return;
+
+        const userMsg: Message = { id: Date.now().toString(), text: input, sender: 'user' };
+        setMessages(prev => [...prev, userMsg]);
+        setInput('');
+        setIsTyping(true);
+
+        setTimeout(() => {
+            const analysis = analyzeRequest(userMsg.text);
+            const botMsg: Message = { 
+                id: (Date.now() + 1).toString(), 
+                text: analysis.response, 
+                sender: 'bot',
+                action: analysis.action
+            };
+            setMessages(prev => [...prev, botMsg]);
+            setIsTyping(false);
+        }, 1500);
+    };
+
+    return (
+        <div className="fixed bottom-8 right-8 z-[100] flex flex-col items-end font-inter">
+            <div 
+                className={`mb-6 w-[300px] md:w-[360px] bg-white rounded-2xl shadow-2xl border border-slate-100 overflow-hidden transition-all duration-300 origin-bottom-right ${
+                    isOpen ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-75 translate-y-12 pointer-events-none h-0'
+                }`}
+            >
+                <div className="bg-trust-blue p-4 flex items-center justify-between text-white">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center">
+                            <Bot size={20} />
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-sm">Consultoria Conseg</h3>
+                            <p className="text-[10px] text-blue-200 flex items-center gap-1">
+                                <span className="w-2 h-2 rounded-full bg-green-400"></span> Online Agora
+                            </p>
+                        </div>
+                    </div>
+                    <button onClick={() => setIsOpen(false)} className="text-white/70 hover:text-white">
+                        <X size={20} />
+                    </button>
+                </div>
+
+                <div className="h-[350px] bg-slate-50 p-4 overflow-y-auto flex flex-col gap-3">
+                    {messages.map((msg) => (
+                        <div key={msg.id} className={`flex flex-col ${msg.sender === 'user' ? 'items-end' : 'items-start'}`}>
+                            <div 
+                                className={`max-w-[85%] p-3 text-sm rounded-xl ${
+                                    msg.sender === 'user' 
+                                    ? 'bg-trust-blue text-white rounded-tr-none' 
+                                    : 'bg-white text-slate-700 border border-slate-200 rounded-tl-none shadow-sm'
+                                }`}
+                            >
+                                {msg.text}
+                            </div>
+                            
+                            {msg.action && (
+                                <button 
+                                    onClick={() => {
+                                        if (msg.action?.link) {
+                                            window.open(msg.action.link, '_blank');
+                                        } else if (msg.action?.route) {
+                                            onNavigate(msg.action.route);
+                                        }
+                                        setIsOpen(false);
+                                    }}
+                                    className="mt-2 text-xs font-bold bg-warm-gold text-white px-4 py-2 rounded-lg hover:bg-amber-600 transition-colors self-start flex items-center gap-1 shadow-sm"
+                                >
+                                    {msg.action.label} <ArrowRight size={12} />
+                                </button>
+                            )}
+                        </div>
+                    ))}
+                    {isTyping && (
+                        <div className="text-xs text-slate-400 ml-2 flex items-center gap-1">
+                            <span>Analisando</span>
+                            <span className="animate-bounce">.</span>
+                            <span className="animate-bounce delay-100">.</span>
+                            <span className="animate-bounce delay-200">.</span>
+                        </div>
+                    )}
+                    <div ref={messagesEndRef} />
+                </div>
+
+                <div className="p-3 bg-white border-t border-slate-100 flex gap-2">
+                    <input 
+                        type="text" 
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                        placeholder="Digite sua necessidade..."
+                        className="flex-1 bg-slate-100 text-slate-800 text-sm rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-trust-blue/50"
+                    />
+                    <button 
+                        onClick={handleSend}
+                        disabled={!input.trim()}
+                        className="p-2 bg-trust-blue text-white rounded-lg hover:bg-trust-light disabled:opacity-50"
+                    >
+                        <Send size={18} />
+                    </button>
+                </div>
+            </div>
+
+            <button 
+                onClick={() => setIsOpen(!isOpen)}
+                className="bg-trust-blue hover:bg-trust-light text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center transition-all hover:scale-110"
+            >
+                {isOpen ? <X size={24} /> : <Bot size={28} />}
+            </button>
+        </div>
+    );
+};
+
+const SimpleDiagnostic = ({ onComplete }: { onComplete?: (system: string) => void }) => {
+    const [input, setInput] = useState('');
+    const [stage, setStage] = useState<'idle' | 'analyzing' | 'result'>('idle');
+    const [suggestion, setSuggestion] = useState<{ name: string, id: string, reason: string, link?: string } | null>(null);
+
+    const analyzeNeed = () => {
         if (!input.trim()) return;
         setStage('analyzing');
-        setTerminalLines([]);
 
-        // Terminal simulation effect
-        let step = 0;
-        const steps = [
-            "> INICIANDO PROTOCOLO DE ANÁLISE NEURAL...",
-            "> CARREGANDO VETORES DE RISCO [##########] 100%",
-            "> PROCESSANDO LINGUAGEM NATURAL (NLP)...",
-            "> IDENTIFICANDO INTENÇÃO DE AQUISIÇÃO...",
-            "> CRUZANDO DADOS COM MATRIZ ESTRATÉGICA...",
-            "> DEFININDO ROTA DO USUÁRIO..."
-        ];
-
-        const interval = setInterval(() => {
-            if (step < steps.length) {
-                addLine(steps[step]);
-                step++;
-            }
-        }, 600);
-
-        // Deep AI processing simulation
         setTimeout(() => {
-            clearInterval(interval);
             const text = input.toLowerCase();
-            
-            // Expanded Keyword Logic
-            const keywords = {
-                legado: ['filho', 'família', 'futuro', 'medo', 'falta', 'ausência', 'morte', 'inventário', 'herança', 'sucessão', 'esposa', 'marido', 'segurança', 'vida'],
-                mobilidade: ['carro', 'batida', 'roubo', 'viagem', 'estrada', 'veículo', 'caminhão', 'frota', 'motorista', 'colisão', 'terceiros', 'seguro auto'],
-                expansao: ['investir', 'dinheiro', 'comprar', 'casa', 'aumentar', 'patrimônio', 'lucro', 'renda', 'imóvel', 'aluguel', 'construir', 'empresa', 'consorcio', 'consórcio', 'aquisição', 'apartamento', 'terreno'],
-                saude: ['saúde', 'hospital', 'doença', 'médico', 'cirurgia', 'internação', 'bem-estar', 'check-up', 'exame', 'família', 'convênio']
-            };
-
-            let scores = { legado: 0, mobilidade: 0, expansao: 0, saude: 0 };
-
-            // Scoring System
-            keywords.legado.forEach(w => { if(text.includes(w)) scores.legado++ });
-            keywords.mobilidade.forEach(w => { if(text.includes(w)) scores.mobilidade++ });
-            keywords.expansao.forEach(w => { if(text.includes(w)) scores.expansao++ });
-            keywords.saude.forEach(w => { if(text.includes(w)) scores.saude++ });
-
-            // Default logic
             let result = { 
-                name: 'Análise de Expansão', 
-                id: 'consorcio', 
-                reason: 'Identificamos um potencial de alavancagem patrimonial. O sistema recomenda acesso imediato ao simulador de estratégia.',
-                active: true
+                name: 'Falar com Consultor', 
+                id: 'contato', 
+                reason: 'Entendemos que sua necessidade é específica. Nossos especialistas vão analisar seu caso com atenção exclusiva.',
+                link: undefined
             };
-
-            const maxScore = Math.max(scores.legado, scores.mobilidade, scores.expansao, scores.saude);
-
-            if (maxScore > 0) {
-                if (scores.expansao >= maxScore) {
-                    result = { 
-                        name: 'Estratégia de Aquisição', 
-                        id: 'consorcio', 
-                        reason: 'Intenção de crescimento patrimonial detectada. A Estratégia de Consórcio utiliza juro zero para aquisição planejada de ativos.',
-                        active: true
-                    };
-                } else if (scores.legado === maxScore) {
-                    result = { 
-                        name: 'Protocolo Legado', 
-                        id: 'vida', 
-                        reason: 'Preocupação com sucessão e segurança familiar identificada. O Sistema Legado cria liquidez imediata e blinda a dinastia.',
-                        active: true
-                    };
-                } else if (scores.mobilidade === maxScore) {
-                    result = { 
-                        name: 'Mandato de Mobilidade', 
-                        id: 'auto', 
-                        reason: 'Foco em ativos de transporte. Necessário blindagem contra paralisação e passivos civis.',
-                        active: false
-                    };
-                } else if (scores.saude === maxScore) {
-                    result = { 
-                        name: 'Escudo Capital Humano', 
-                        id: 'saude', 
-                        reason: 'Prioridade biológica detectada. Conexão com a elite médica necessária.',
-                        active: false
-                    };
-                }
+            
+            if (text.includes('carro') || text.includes('moto') || text.includes('frota') || text.includes('veiculo')) {
+                result = { name: 'Seguro Auto & Frota', id: 'auto', reason: 'Garanta a continuidade da sua mobilidade. Proteção total contra imprevistos para você ou sua empresa.', link: undefined };
+            } else if (text.includes('saude') || text.includes('hospital') || text.includes('doença') || text.includes('medico')) {
+                result = { name: 'Gestão de Saúde', id: 'saude', reason: 'Acesso à medicina de ponta é inegociável. Temos as melhores redes credenciadas para sua segurança.', link: undefined };
+            } else if (text.includes('filho') || text.includes('familia') || text.includes('esposa') || text.includes('marido') || text.includes('vida') || text.includes('patrimonio')) {
+                result = { name: 'Planejamento Sucessório (Vida)', id: 'vida', reason: 'Proteja seu legado e garanta o padrão de vida da sua família. A forma mais inteligente de sucessão patrimonial.', link: LINK_SISTEMA_LEGADO };
+            } else if (text.includes('casa') || text.includes('investir') || text.includes('comprar') || text.includes('imovel')) {
+                result = { name: 'Consórcio Estratégico', id: 'consorcio', reason: 'Amplie seu patrimônio sem pagar juros. A ferramenta financeira ideal para aquisição de imóveis e veículos.', link: LINK_SISTEMA_CONSORCIO };
             }
 
             setSuggestion(result);
             setStage('result');
-            if(onComplete) onComplete(result.id);
-        }, 4500);
-    };
-
-    const handleSystemAccess = () => {
-        if (!suggestion) return;
-        
-        if (suggestion.id === 'consorcio') {
-            window.open('https://consorcio.consegseguro.com/', '_blank');
-        } else if (suggestion.id === 'vida') {
-            window.open('https://protocolo-de-legado-455137106232.us-west1.run.app/', '_blank');
-        }
+            if(onComplete && !result.link) onComplete(result.id);
+        }, 1500);
     };
 
     return (
-        <div className="w-full max-w-4xl mx-auto font-mono shadow-2xl rounded-lg overflow-hidden border border-slate-800 bg-[#050505] relative">
-            {/* Animated Border Gradient */}
-            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-magic-blue to-transparent animate-[shimmer_2s_infinite]"></div>
-            
-            {/* Terminal Header */}
-            <div className="bg-[#0a0a0a] p-3 flex items-center justify-between border-b border-slate-800">
-                <div className="flex gap-2">
-                    <div className="w-3 h-3 rounded-full bg-red-500/20 border border-red-500/50"></div>
-                    <div className="w-3 h-3 rounded-full bg-yellow-500/20 border border-yellow-500/50"></div>
-                    <div className="w-3 h-3 rounded-full bg-green-500/20 border border-green-500/50"></div>
-                </div>
-                <div className="text-xs text-slate-500 font-bold tracking-widest flex items-center gap-2">
-                    <BrainCircuit size={12} /> CONSEG_NEURAL_CORE_V4.0
-                </div>
+        <div className="w-full max-w-3xl mx-auto bg-white rounded-3xl shadow-xl border border-slate-100 overflow-hidden">
+            <div className="bg-trust-blue p-8 text-white text-center">
+                <h3 className="font-serif font-bold text-2xl mb-2">Consultoria Inteligente</h3>
+                <p className="text-blue-100 text-sm">Descreva o que você busca para proteger ou ampliar seu patrimônio.</p>
             </div>
 
-            <div className="p-6 md:p-10 min-h-[400px] flex flex-col justify-center relative z-10">
-                {/* Background Grid */}
-                <div className="absolute inset-0 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] z-0 opacity-20 pointer-events-none bg-[length:100%_2px,3px_100%]"></div>
-
+            <div className="p-8 bg-slate-50">
                 {stage === 'idle' && (
-                    <div className="space-y-6 animate-fade-in relative z-10">
-                        <div className="text-magic-blue mb-8 text-center">
-                            <Terminal size={48} className="mx-auto mb-4 opacity-80" />
-                            <h3 className="text-2xl md:text-3xl font-bold font-orbitron text-white mb-2">Interface de Diagnóstico</h3>
-                            <p className="text-slate-400 max-w-lg mx-auto">
-                                Descreva seu objetivo atual. Nossa I.A. processará sua necessidade e conectará você ao sistema de blindagem ou aquisição correto.
-                            </p>
-                        </div>
-                        
-                        <div className="relative group max-w-2xl mx-auto">
-                            <div className="absolute -inset-1 bg-gradient-to-r from-magic-blue to-purple-600 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
-                            <div className="relative">
-                                <textarea 
-                                    value={input}
-                                    onChange={(e) => setInput(e.target.value)}
-                                    className="w-full bg-[#080808] border border-slate-700 text-green-400 placeholder-slate-700 rounded-lg p-6 focus:border-magic-blue focus:ring-0 outline-none transition-all h-40 resize-none text-lg leading-relaxed shadow-inner font-mono"
-                                    placeholder="// Ex: Preciso aumentar meu patrimônio com segurança... ou Preciso proteger minha família..."
-                                />
-                                <div className="absolute bottom-4 right-4 text-xs text-slate-600 font-bold">
-                                    {input.length} CHARS
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div className="flex justify-center">
-                            <button 
-                                onClick={analyzeContext}
-                                disabled={!input.trim()}
-                                className="bg-white text-black hover:bg-magic-blue hover:text-white px-8 py-3 rounded-md font-bold uppercase tracking-widest transition-all disabled:opacity-30 disabled:cursor-not-allowed flex items-center gap-2 shadow-[0_0_20px_rgba(255,255,255,0.2)]"
-                            >
-                                <Cpu size={18} /> Processar Dados
-                            </button>
-                        </div>
+                    <div className="space-y-4">
+                        <textarea 
+                            value={input}
+                            onChange={(e) => setInput(e.target.value)}
+                            className="w-full bg-white border border-slate-200 text-slate-700 rounded-xl p-4 focus:ring-2 focus:ring-trust-blue/20 outline-none h-32 resize-none"
+                            placeholder="Ex: Quero garantir o futuro dos meus filhos... ou... Preciso renovar a frota da empresa..."
+                        />
+                        <button 
+                            onClick={analyzeNeed}
+                            disabled={!input.trim()}
+                            className="w-full bg-trust-blue text-white py-4 rounded-xl font-bold hover:bg-trust-light transition-all shadow-md flex items-center justify-center gap-2"
+                        >
+                            Analisar Melhor Opção <ArrowRight size={20} />
+                        </button>
                     </div>
                 )}
 
                 {stage === 'analyzing' && (
-                    <div className="py-8 font-mono max-w-xl mx-auto w-full">
-                        {terminalLines.map((line, i) => (
-                            <div key={i} className="text-green-500 text-sm mb-2 pl-2 border-l-2 border-green-800 animate-fade-in">
-                                {line}
-                            </div>
-                        ))}
-                        <div className="mt-4 h-1 w-full bg-slate-800 rounded overflow-hidden">
-                            <div className="h-full bg-green-500 animate-[shimmer_1.5s_infinite]"></div>
-                        </div>
+                    <div className="text-center py-10">
+                        <div className="animate-spin w-10 h-10 border-4 border-trust-blue border-t-transparent rounded-full mx-auto mb-4"></div>
+                        <p className="text-slate-600 font-bold">Processando sua necessidade estratégica...</p>
                     </div>
                 )}
 
                 {stage === 'result' && suggestion && (
-                    <div className="animate-fade-in text-center relative z-10 max-w-2xl mx-auto">
-                        <div className="inline-block p-4 rounded-full bg-slate-900 border border-slate-700 mb-6 shadow-2xl">
-                            {suggestion.active ? (
-                                <CheckCircle className="w-12 h-12 text-green-500" />
-                            ) : (
-                                <Lock className="w-12 h-12 text-amber-500" />
-                            )}
+                    <div className="text-center animate-fade-in">
+                        <div className="inline-block p-3 bg-green-100 text-green-600 rounded-full mb-4">
+                            <ShieldCheck size={32} />
                         </div>
-
-                        <h3 className="text-3xl md:text-4xl font-orbitron font-bold text-white mb-4">
-                            {suggestion.name}
-                        </h3>
+                        <h3 className="text-2xl font-bold text-trust-blue mb-2">Solução: {suggestion.name}</h3>
+                        <p className="text-slate-600 mb-6 max-w-md mx-auto">{suggestion.reason}</p>
                         
-                        <div className="bg-slate-900/50 border border-slate-800 p-6 rounded-xl mb-8 text-left">
-                            <p className="text-sm text-slate-500 uppercase tracking-widest mb-2 font-bold">Relatório da I.A.</p>
-                            <p className="text-slate-300 text-lg leading-relaxed font-light">
-                                "{suggestion.reason}"
-                            </p>
+                        <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                            <button 
+                                onClick={() => { setStage('idle'); setInput(''); }}
+                                className="text-slate-500 text-sm font-bold underline hover:text-trust-blue"
+                            >
+                                Nova Consulta
+                            </button>
+                            <button 
+                                onClick={() => {
+                                    if (suggestion.link) {
+                                        window.open(suggestion.link, '_blank');
+                                    } else {
+                                        onComplete && onComplete(suggestion.id);
+                                    }
+                                }}
+                                className="bg-trust-blue text-white px-8 py-3 rounded-lg font-bold hover:bg-trust-light shadow-lg"
+                            >
+                                Acessar Solução
+                            </button>
                         </div>
-
-                        {suggestion.active ? (
-                            <div className="space-y-4">
-                                <button 
-                                    onClick={handleSystemAccess}
-                                    className="w-full sm:w-auto bg-gradient-to-r from-magic-blue to-blue-600 text-white px-10 py-4 rounded-lg font-bold uppercase tracking-widest hover:shadow-[0_0_40px_rgba(0,191,255,0.6)] hover:scale-105 transition-all flex items-center justify-center gap-3 mx-auto"
-                                >
-                                    Acessar Sistema <ExternalLink size={20} />
-                                </button>
-                                <p className="text-xs text-slate-500 mt-4">
-                                    Redirecionando para ambiente seguro (SSL).
-                                </p>
-                            </div>
-                        ) : (
-                            <div className="space-y-4">
-                                <div className="p-4 bg-amber-900/20 border border-amber-500/30 rounded-lg text-amber-200 text-sm">
-                                    <p className="font-bold flex items-center justify-center gap-2 mb-1">
-                                        <Zap size={14} /> SISTEMA EM ATUALIZAÇÃO
-                                    </p>
-                                    Este protocolo específico está passando por upgrades de segurança.
-                                </div>
-                                <button 
-                                    onClick={() => { setStage('idle'); setInput(''); }}
-                                    className="text-slate-400 hover:text-white text-sm flex items-center gap-2 mx-auto transition-colors"
-                                >
-                                    <RefreshCw size={14} /> Nova Análise
-                                </button>
-                            </div>
-                        )}
                     </div>
                 )}
             </div>
@@ -250,78 +334,51 @@ const NeuralDiagnostic = ({ onComplete }: { onComplete?: (system: string) => voi
 
 const App: React.FC = () => {
     const [currentRoute, setCurrentRoute] = useState<RouteName>('inicio');
-    const [user, setUser] = useState<any>(null);
-    const [userRole, setUserRole] = useState<UserRole>('broker');
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [isAuthLoading, setIsAuthLoading] = useState(true);
-    
-    const [activeSystem, setActiveSystem] = useState<string>('');
 
     useEffect(() => {
         const handleHashChange = () => {
             const hash = window.location.hash.substring(1).split('?')[0] as RouteName;
-            setCurrentRoute(hash || 'inicio');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            if (hash) {
+                setCurrentRoute(hash);
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
         };
-
         window.addEventListener('hashchange', handleHashChange);
-        handleHashChange(); 
-
+        if (window.location.hash) handleHashChange();
+        
         return () => window.removeEventListener('hashchange', handleHashChange);
-    }, []);
-
-    useEffect(() => {
-        if (auth) {
-            const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-                setUser(currentUser);
-                if (currentUser) {
-                    const email = currentUser.email || '';
-                    if (email === 'Consegcn@terra.com.br' || email.startsWith('admin')) {
-                        setUserRole('admin');
-                    } else {
-                        setUserRole('broker');
-                    }
-                    setIsAuthenticated(true);
-                } else {
-                    setIsAuthenticated(false);
-                    setUserRole('broker');
-                }
-                setIsAuthLoading(false);
-            });
-            return () => unsubscribe();
-        } else {
-            setIsAuthLoading(false);
-        }
     }, []);
 
     const updateRoute = (route: RouteName) => {
         window.location.hash = route;
+        setCurrentRoute(route);
     };
 
-    const activateSystem = (product: string) => {
-        setActiveSystem(product);
-        // Rotas diretas para sistemas ativos
-        if (product === 'consorcio') {
-             window.open('https://consorcio.consegseguro.com/', '_blank');
-        } else if (product === 'vida') {
-             window.open('https://protocolo-de-legado-455137106232.us-west1.run.app/', '_blank');
-        } else {
-            updateRoute('contato');
-        }
-    };
-
-    const FloatingWhatsApp = () => (
-        <a 
-            href="https://wa.me/5511999999999?text=Olá,%20gostaria%20de%20iniciar%20minha%20estratégia%20de%20blindagem." 
-            target="_blank"
-            rel="noopener noreferrer"
-            className="fixed bottom-6 right-6 z-50 bg-[#25D366] hover:bg-[#20bd5a] text-white p-4 rounded-full shadow-glow-strong transition-all hover:scale-110 flex items-center justify-center group"
-        >
-            <MessageCircle size={28} className="fill-white" />
-            <span className="absolute right-full mr-4 bg-white text-slate-800 px-3 py-1 rounded-lg text-xs font-bold shadow-md opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
-                Falar com Estrategista
-            </span>
-        </a>
+    const renderLogos = () => (
+        <div className="py-10 border-y border-slate-100 bg-slate-50/50 mb-12">
+            <div className="container mx-auto px-4">
+                <p className="text-center text-slate-400 text-xs font-bold uppercase tracking-widest mb-8">Parceiros Estratégicos</p>
+                <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
+                    {INSURERS.map((insurer) => (
+                        <div key={insurer.name} className="group flex flex-col items-center justify-center" title={insurer.name}>
+                            {insurer.url.includes('http') ? (
+                                <img 
+                                    src={insurer.url} 
+                                    alt={insurer.name}
+                                    className="h-8 md:h-10 w-auto object-contain hover:scale-110 transition-transform"
+                                    onError={(e) => {
+                                        (e.target as HTMLImageElement).style.display = 'none';
+                                        const span = (e.target as HTMLImageElement).nextSibling as HTMLElement;
+                                        if(span) span.style.display = 'block';
+                                    }}
+                                />
+                            ) : null}
+                            <span className="text-xs font-bold text-slate-500 hidden group-hover:block mt-1">{insurer.name}</span>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </div>
     );
 
     const renderContent = () => {
@@ -329,616 +386,430 @@ const App: React.FC = () => {
             case 'inicio':
                 return (
                     <div className="animate-fade-in">
-                        <FloatingWhatsApp />
-                        
-                        {/* HERO SECTION - DEEP NEURAL MESH */}
-                        <section className="relative min-h-screen flex items-center pt-20 overflow-hidden bg-[#020617]">
-                            {/* Neural Mesh Background */}
-                            <div className="absolute inset-0 pointer-events-none">
-                                {/* Deep Grid */}
-                                <div className="absolute inset-0 bg-[linear-gradient(to_right,#4f4f4f1a_1px,transparent_1px),linear-gradient(to_bottom,#4f4f4f1a_1px,transparent_1px)] bg-[size:60px_60px] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)]"></div>
-                                
-                                {/* Glowing Nodes */}
-                                <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-magic-blue rounded-full shadow-[0_0_15px_rgba(0,191,255,1)] animate-ping"></div>
-                                <div className="absolute bottom-1/3 right-1/4 w-2 h-2 bg-purple-500 rounded-full shadow-[0_0_15px_rgba(168,85,247,1)] animate-ping delay-700"></div>
-                                <div className="absolute top-1/3 right-1/3 w-1 h-1 bg-white rounded-full shadow-[0_0_10px_white] animate-pulse"></div>
-                                
-                                {/* Atmospheric Glow */}
-                                <div className="absolute top-[-10%] right-[-10%] w-[800px] h-[800px] bg-magic-blue/10 rounded-full blur-[120px] animate-pulse"></div>
-                                <div className="absolute bottom-[-10%] left-[-10%] w-[800px] h-[800px] bg-purple-900/20 rounded-full blur-[120px]"></div>
-                            </div>
-                            
-                            <div className="container mx-auto px-4 relative z-10 grid lg:grid-cols-2 gap-16 items-center">
-                                <div className="text-left space-y-8 order-2 lg:order-1">
-                                    <div className="inline-flex items-center gap-3 py-2 px-4 rounded-full bg-black/40 border border-magic-blue/30 text-magic-blue text-[10px] font-orbitron font-bold tracking-[0.25em] shadow-[0_0_20px_rgba(0,191,255,0.15)] backdrop-blur-md uppercase">
-                                        <span className="relative flex h-2 w-2">
-                                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-magic-blue opacity-75"></span>
-                                          <span className="relative inline-flex rounded-full h-2 w-2 bg-magic-blue"></span>
-                                        </span>
-                                        System V4.1 Neural-Ready
-                                    </div>
-                                    
-                                    <h1 className="font-orbitron text-5xl sm:text-7xl font-black text-white leading-[1.1] tracking-tight drop-shadow-2xl">
-                                        Soberania <br/>
-                                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-magic-blue via-cyan-400 to-white animate-[shimmer_3s_infinite]">Algorítmica</span>
-                                    </h1>
-                                    
-                                    <p className="text-lg text-slate-400 max-w-xl leading-relaxed font-light pl-6 border-l border-magic-blue/50">
-                                        Modelagem preditiva de riscos patrimoniais. Utilizamos inteligência de dados para construir ecossistemas de proteção que antecipam o caos.
-                                    </p>
-                                    
-                                    <div className="flex flex-wrap gap-5 pt-6">
-                                        <Button onClick={() => updateRoute('contato')} className="shadow-[0_0_30px_rgba(0,191,255,0.3)] bg-gradient-to-r from-magic-blue to-blue-700 border-none">
-                                            <BrainCircuit className="mr-2" size={20}/> Consultar I.A.
+                        {/* HERO SECTION - Espaçamento Mobile Ajustado para pt-28 */}
+                        <section className="relative pt-28 md:pt-48 pb-20 bg-[#F9FAFB] overflow-hidden">
+                            <div className="container mx-auto px-4 text-center relative z-10">
+                                <span className="inline-block py-1 px-3 rounded-full bg-blue-100 text-trust-blue text-xs font-bold uppercase tracking-wider mb-6 border border-blue-200">
+                                    Segurança Patrimonial & Familiar
+                                </span>
+                                <h1 className="font-serif text-4xl md:text-6xl font-bold text-trust-blue leading-tight mb-6">
+                                    Proteja o que você levou <br/>
+                                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-trust-blue to-blue-600">uma vida inteira para construir.</span>
+                                </h1>
+                                <p className="text-lg text-slate-600 max-w-2xl mx-auto mb-10 leading-relaxed">
+                                    Unimos inteligência estratégica e atendimento humano para blindar seu patrimônio e garantir o futuro da sua família. Seguros e Consórcios sem burocracia.
+                                </p>
+                                <div className="mx-auto max-w-3xl">
+                                    <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
+                                        <Button onClick={() => updateRoute('contato')} className="w-full sm:w-auto min-w-[220px] shadow-2xl">
+                                            Solicitar Estudo
                                         </Button>
-                                        <Button variant="secondary" onClick={() => updateRoute('filosofia')} className="border-slate-700 text-slate-300 hover:text-white hover:border-magic-blue hover:bg-magic-blue/5">
-                                            <Network className="mr-2" size={20}/> Explorar Rede
+                                        <Button variant="secondary" onClick={() => updateRoute('sobre')} className="w-full sm:w-auto min-w-[220px]">
+                                            Nossa História
                                         </Button>
-                                    </div>
-
-                                    <div className="flex items-center gap-8 text-[10px] font-bold text-slate-500 font-orbitron pt-10 uppercase tracking-widest border-t border-white/5 mt-8">
-                                        <span className="flex items-center gap-2 text-slate-400"><ShieldCheck size={14} className="text-green-500"/> 256-bit Encrypted</span>
-                                        <span className="flex items-center gap-2 text-slate-400"><Database size={14} className="text-purple-500"/> Real-Time Sync</span>
                                     </div>
                                 </div>
 
-                                {/* VISUAL: NEURAL CORE */}
-                                <div className="relative hidden lg:block perspective-1000 order-1 lg:order-2 h-[600px]">
-                                    {/* Central Core */}
-                                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-gradient-to-b from-black/60 to-slate-900/80 rounded-full border border-magic-blue/30 backdrop-blur-xl shadow-[0_0_60px_rgba(0,191,255,0.2)] z-20 flex items-center justify-center group overflow-hidden">
-                                        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/circuit-board.png')] opacity-20 animate-[spin_60s_linear_infinite]"></div>
-                                        
-                                        <div className="text-center relative z-10">
-                                            <div className="w-20 h-20 mx-auto bg-magic-blue/10 rounded-full flex items-center justify-center border border-magic-blue/50 mb-4 group-hover:scale-110 transition-transform duration-500">
-                                                <BrainCircuit size={40} className="text-magic-blue" />
-                                            </div>
-                                            <div className="font-orbitron font-bold text-white text-xl tracking-widest">CORE</div>
-                                            <div className="text-[10px] text-magic-blue font-mono mt-1">ANALYSIS ACTIVE</div>
-                                        </div>
-                                    </div>
-
-                                    {/* Floating Data Cards */}
-                                    <div className="absolute top-[10%] right-[5%] w-64 p-4 bg-black/60 backdrop-blur-md border border-green-500/30 rounded-lg transform rotate-6 animate-float z-10">
-                                        <div className="flex justify-between items-center mb-2 text-green-400 text-xs font-mono">
-                                            <span>LIFESPAN.METRIC</span>
-                                            <span>98%</span>
-                                        </div>
-                                        <div className="h-1 bg-green-900 rounded-full overflow-hidden">
-                                            <div className="h-full bg-green-500 w-[98%]"></div>
-                                        </div>
-                                    </div>
-
-                                    <div className="absolute bottom-[15%] left-[0%] w-72 p-4 bg-black/60 backdrop-blur-md border border-purple-500/30 rounded-lg transform -rotate-3 animate-float z-30" style={{animationDelay: '1.5s'}}>
-                                        <div className="flex justify-between items-center mb-2 text-purple-400 text-xs font-mono">
-                                            <span>ASSET.PROTECTION</span>
-                                            <Shield size={12}/>
-                                        </div>
-                                        <div className="grid grid-cols-5 gap-1">
-                                            {[1,2,3,4,5].map(i => <div key={i} className="h-1 bg-purple-500/50 rounded-sm"></div>)}
-                                        </div>
-                                        <div className="mt-2 text-[10px] text-slate-400 font-mono">Firewall patrimonial ativado.</div>
-                                    </div>
-                                </div>
+                                <SimpleDiagnostic onComplete={(route) => updateRoute(route as RouteName)} />
                             </div>
                         </section>
 
-                        {/* Modules Grid */}
-                        <section className="py-32 bg-slate-50 relative">
-                            <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-[#020617] to-transparent pointer-events-none"></div>
-                            
-                            <div className="container mx-auto px-4 relative z-10">
-                                <div className="text-center mb-20">
-                                    <h2 className="font-orbitron text-4xl font-black text-cosmic mb-4">Módulos Estratégicos</h2>
-                                    <p className="text-slate-500 max-w-2xl mx-auto text-lg">Acesse terminais dedicados para cada dimensão do seu patrimônio.</p>
+                        {/* LOGOS SECTION */}
+                        {renderLogos()}
+
+                        {/* CARDS DE SERVIÇOS SIMPLIFICADOS */}
+                        <section className="py-10 bg-white">
+                            <div className="container mx-auto px-4">
+                                <div className="text-center mb-16">
+                                    <h2 className="text-3xl font-serif font-bold text-trust-blue mb-4">Soluções Completas</h2>
+                                    <p className="text-slate-500">Gestão de riscos e ampliação de patrimônio em um só lugar.</p>
                                 </div>
 
-                                <div className="grid md:grid-cols-3 gap-8">
-                                    {[
-                                        { 
-                                            title: "Módulo Legado", 
-                                            subtitle: "Sucessão & Vida",
-                                            status: "Sistema Ativo",
-                                            desc: "Engenharia financeira para garantir que sua dinastia prospere. Liquidez imediata e proteção contra inventários.", 
-                                            icon: <Crown className="w-8 h-8" />, 
-                                            route: 'legado',
-                                            color: 'text-white',
-                                            bg: 'bg-gradient-to-br from-rose-500 to-pink-600',
-                                            glow: 'shadow-rose-500/30'
-                                        },
-                                        { 
-                                            title: "Módulo Mobilidade", 
-                                            subtitle: "Auto & Frota",
-                                            status: "Em Breve",
-                                            desc: "Continuidade de movimento. Sistemas anti-paralisação para seus veículos e responsabilidade civil massiva.", 
-                                            icon: <Zap className="w-8 h-8" />, 
-                                            route: 'mobilidade',
-                                            color: 'text-white',
-                                            bg: 'bg-gradient-to-br from-amber-500 to-orange-600',
-                                            glow: 'shadow-amber-500/30'
-                                        },
-                                        { 
-                                            title: "Módulo Expansão", 
-                                            subtitle: "Invest & Consórcio",
-                                            status: "Sistema Ativo",
-                                            desc: "A matemática do crescimento. Aquisição de ativos imobiliários e veículos sem o custo de oportunidade dos juros.", 
-                                            icon: <TrendingUp className="w-8 h-8" />, 
-                                            route: 'consorcio',
-                                            color: 'text-white',
-                                            bg: 'bg-gradient-to-br from-emerald-500 to-teal-600',
-                                            glow: 'shadow-emerald-500/30'
-                                        }
-                                    ].map((item, idx) => (
-                                        <div key={idx} onClick={() => updateRoute(item.route as RouteName)} className={`group cursor-pointer p-1 rounded-[32px] bg-white shadow-xl hover:-translate-y-2 transition-all duration-500 relative overflow-hidden`}>
-                                            <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl ${item.bg}`}></div>
-                                            
-                                            <div className="relative bg-white h-full rounded-[28px] p-8 flex flex-col border border-slate-100 overflow-hidden">
-                                                <div className="absolute top-0 right-0 p-6 opacity-20 group-hover:opacity-100 transition-all group-hover:translate-x-2">
-                                                    <ArrowRight className="text-slate-800" />
-                                                </div>
-
-                                                <div className={`${item.bg} ${item.color} w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg mb-8 group-hover:scale-110 transition-transform duration-500`}>
-                                                    {item.icon}
-                                                </div>
-
-                                                <div className="mb-auto">
-                                                    <div className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2">{item.subtitle}</div>
-                                                    <h3 className="font-orbitron text-2xl font-bold text-cosmic mb-4 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-slate-800 group-hover:to-slate-500 transition-all">{item.title}</h3>
-                                                    <p className="text-slate-600 font-medium leading-relaxed">
-                                                        {item.desc}
-                                                    </p>
-                                                </div>
-                                                
-                                                <div className="mt-8 pt-8 border-t border-slate-100 flex justify-between items-center">
-                                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">Status do Sistema</span>
-                                                    <span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wide text-white ${item.status === 'Sistema Ativo' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'} shadow-md`}>
-                                                        {item.status}
-                                                    </span>
-                                                </div>
-                                            </div>
+                                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+                                    {/* Vida */}
+                                    <div onClick={() => updateRoute('vida')} className="group p-8 bg-slate-50 rounded-3xl border border-slate-100 hover:border-trust-blue hover:shadow-xl transition-all cursor-pointer flex flex-col items-center text-center">
+                                        <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-trust-blue mb-6 shadow-sm group-hover:scale-110 transition-transform">
+                                            <Umbrella size={28} />
                                         </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </section>
-
-                        {/* Metrics Section */}
-                        <section className="bg-[#020617] py-24 relative overflow-hidden">
-                            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
-                            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#020617] to-[#1e293b] opacity-90"></div>
-                            
-                            <div className="container mx-auto px-4 relative z-10">
-                                <div className="flex flex-col md:flex-row justify-between items-end mb-12 border-b border-slate-700/50 pb-6">
-                                    <div>
-                                        <h3 className="font-orbitron text-2xl font-bold text-white flex items-center gap-2">
-                                            <Database size={20} className="text-magic-blue" /> Métricas Globais
-                                        </h3>
-                                        <p className="text-slate-400 text-xs uppercase tracking-widest mt-2">Consolidado 10 Anos / Rede de Parceiros</p>
+                                        <h3 className="text-xl font-bold text-trust-blue mb-3">Seguro de Vida & Sucessão</h3>
+                                        <p className="text-slate-500 text-sm leading-relaxed mb-6">
+                                            A certeza de que o padrão de vida da sua família será mantido. Liquidez imediata e proteção financeira.
+                                        </p>
+                                        <span className="text-trust-blue text-sm font-bold flex items-center gap-2 mt-auto">Ver detalhes <ArrowRight size={16}/></span>
                                     </div>
-                                    <div className="flex items-center gap-2 text-green-400 text-xs font-mono mt-4 md:mt-0">
-                                        <span className="relative flex h-2 w-2">
-                                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                                          <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                                        </span>
-                                        LIVE FEED
-                                    </div>
-                                </div>
 
-                                <div className="grid md:grid-cols-3 gap-px bg-slate-800/50 border border-slate-700 rounded-2xl overflow-hidden">
-                                    {[
-                                        { val: "+12 Bi", label: "Vidas Indenizadas", sub: "Recursos entregues" },
-                                        { val: "+8.5 Bi", label: "Patrimônio Salvo", sub: "Recuperação de ativos" },
-                                        { val: "+25 Bi", label: "Capital Segurado", sub: "Cobertura total ativa" },
-                                    ].map((stat, i) => (
-                                        <div key={i} className="bg-[#050b14] p-8 hover:bg-[#0f172a] transition-colors group border-r border-white/5 last:border-0">
-                                            <div className="font-orbitron text-4xl sm:text-5xl font-black text-white mb-2 group-hover:text-magic-blue transition-colors">
-                                                {stat.val}
-                                            </div>
-                                            <p className="text-slate-300 font-bold text-sm uppercase tracking-wider mb-1">{stat.label}</p>
-                                            <p className="text-slate-500 text-xs font-mono">{stat.sub}</p>
+                                    {/* Auto */}
+                                    <div onClick={() => updateRoute('auto')} className="group p-8 bg-slate-50 rounded-3xl border border-slate-100 hover:border-trust-blue hover:shadow-xl transition-all cursor-pointer flex flex-col items-center text-center">
+                                        <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-trust-blue mb-6 shadow-sm group-hover:scale-110 transition-transform">
+                                            <Car size={28} />
                                         </div>
-                                    ))}
+                                        <h3 className="text-xl font-bold text-trust-blue mb-3">Auto & Frota</h3>
+                                        <p className="text-slate-500 text-sm leading-relaxed mb-6">
+                                            Mais que proteção veicular: sua tranquilidade no trânsito com assistência completa e agilidade no sinistro.
+                                        </p>
+                                        <span className="text-trust-blue text-sm font-bold flex items-center gap-2 mt-auto">Ver detalhes <ArrowRight size={16}/></span>
+                                    </div>
+
+                                    {/* Saúde */}
+                                    <div onClick={() => updateRoute('saude')} className="group p-8 bg-slate-50 rounded-3xl border border-slate-100 hover:border-trust-blue hover:shadow-xl transition-all cursor-pointer flex flex-col items-center text-center">
+                                        <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-trust-blue mb-6 shadow-sm group-hover:scale-110 transition-transform">
+                                            <Heart size={28} />
+                                        </div>
+                                        <h3 className="text-xl font-bold text-trust-blue mb-3">Saúde Premium</h3>
+                                        <p className="text-slate-500 text-sm leading-relaxed mb-6">
+                                            O maior patrimônio é a sua saúde. Acesso à melhor medicina do país para você e seus colaboradores.
+                                        </p>
+                                        <span className="text-trust-blue text-sm font-bold flex items-center gap-2 mt-auto">Ver detalhes <ArrowRight size={16}/></span>
+                                    </div>
+
+                                    {/* Consórcio */}
+                                    <div onClick={() => updateRoute('consorcio')} className="group p-8 bg-slate-50 rounded-3xl border border-slate-100 hover:border-trust-blue hover:shadow-xl transition-all cursor-pointer flex flex-col items-center text-center">
+                                        <div className="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-trust-blue mb-6 shadow-sm group-hover:scale-110 transition-transform">
+                                            <TrendingUp size={28} />
+                                        </div>
+                                        <h3 className="text-xl font-bold text-trust-blue mb-3">Consórcios</h3>
+                                        <p className="text-slate-500 text-sm leading-relaxed mb-6">
+                                            Planejamento financeiro inteligente. Aumente seu patrimônio imobiliário e veicular fugindo dos juros bancários.
+                                        </p>
+                                        <span className="text-trust-blue text-sm font-bold flex items-center gap-2 mt-auto">Ver detalhes <ArrowRight size={16}/></span>
+                                    </div>
                                 </div>
                             </div>
                         </section>
                     </div>
                 );
 
-            case 'legado':
+            case 'vida':
                 return (
-                    <SectionWrapper 
-                        id="legado" 
-                        title="Protocolo de Legado" 
-                        subtitle="Sua família não precisa sofrer com o inventário. O Sistema Legado cria liquidez instantânea e garante a soberania da sua dinastia."
-                    >
-                        <FloatingWhatsApp />
-                        <VideoPlayer videoId="uXEC8wRPYuo" title="Protocolo de Legado" />
-                        
-                        <div className="grid md:grid-cols-3 gap-8 mb-16 mt-12">
-                            {[
-                                { title: "Zero Inventário", text: "Recursos entregues diretamente aos beneficiários, livres de impostos de transmissão e custos judiciais." },
-                                { title: "Liquidez em Horas", text: "Enquanto o patrimônio físico fica travado na justiça, o Sistema Legado injeta capital imediato na conta." },
-                                { title: "Sucessão Empresarial", text: "Garanta que seus sócios ou herdeiros tenham caixa para comprar as cotas e manter a empresa viva." }
-                            ].map((card, i) => (
-                                <div key={i} className="p-8 bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-glow transition-shadow duration-300">
-                                    <h3 className="font-orbitron text-lg font-bold text-cosmic mb-3">{card.title}</h3>
-                                    <p className="text-slate-600 leading-relaxed font-light">{card.text}</p>
+                    <SectionWrapper id="vida" title="Seguro de Vida" subtitle="Garantia de futuro para quem você mais ama.">
+                        <div className="grid md:grid-cols-2 gap-12 items-center">
+                            <div className="space-y-6 text-lg text-slate-600 leading-relaxed">
+                                <p>
+                                    Seguro de vida não é sobre morte, é sobre <strong>amor e responsabilidade</strong>. É garantir que sua família mantenha a dignidade, a casa e os estudos dos filhos, independente das circunstâncias.
+                                </p>
+                                <h4 className="font-bold text-trust-blue text-xl mt-4">Pilares da Proteção:</h4>
+                                <ul className="space-y-4">
+                                    <li className="flex items-start gap-3">
+                                        <CheckCircle className="text-green-500 mt-1 flex-shrink-0" size={24}/>
+                                        <span><strong>Sucessão Patrimonial:</strong> Liquidez imediata para custos de inventário, sem travar os bens da família.</span>
+                                    </li>
+                                    <li className="flex items-start gap-3">
+                                        <CheckCircle className="text-green-500 mt-1 flex-shrink-0" size={24}/>
+                                        <span><strong>Proteção em Vida:</strong> Indenização para diagnóstico de doenças graves (Câncer, Infarto, AVC) para custear o melhor tratamento.</span>
+                                    </li>
+                                    <li className="flex items-start gap-3">
+                                        <CheckCircle className="text-green-500 mt-1 flex-shrink-0" size={24}/>
+                                        <span><strong>Personalização:</strong> Apólices desenhadas sob medida para sua realidade financeira.</span>
+                                    </li>
+                                </ul>
+                                <div className="pt-8 flex justify-center md:justify-start">
+                                    <Button onClick={() => window.open(LINK_SISTEMA_LEGADO, '_blank')} className="w-full sm:w-auto shadow-2xl">
+                                        Simular Proteção Agora <ExternalLink size={18} className="ml-2"/>
+                                    </Button>
                                 </div>
-                            ))}
+                                <p className="text-xs text-slate-400 mt-2 text-center md:text-left">Redirecionamento seguro para nosso sistema de cálculo.</p>
+                            </div>
+                            <div className="md:order-last order-first">
+                                <BannerGenerator 
+                                    title="Legado & Família" 
+                                    image="https://images.unsplash.com/photo-1511895426328-dc8714191300?q=80&w=2070&auto=format&fit=crop"
+                                />
+                            </div>
                         </div>
-
-                        <div className="flex justify-center text-center flex-col items-center gap-4">
-                            <Button 
-                                onClick={() => window.open('https://protocolo-de-legado-455137106232.us-west1.run.app/', '_blank')}
-                                className="shadow-[0_0_30px_rgba(0,191,255,0.4)] px-10 py-5 text-lg"
-                            >
-                                Acessar Protocolo Legado <ExternalLink size={20} className="ml-2" />
-                            </Button>
-                            <p className="text-sm text-slate-400">Acesso seguro ao sistema de blindagem.</p>
-                        </div>
+                        {renderLogos()}
                     </SectionWrapper>
                 );
 
-            case 'mobilidade':
+            case 'auto':
                 return (
-                    <SectionWrapper 
-                        id="mobilidade" 
-                        title="Mandato de Mobilidade" 
-                        subtitle="Sua liberdade de movimento é inegociável. Proteção total para seus veículos, garantindo que sua vida e seus negócios nunca parem."
-                    >
-                        <FloatingWhatsApp />
-                        <VideoPlayer videoId="D8afEYQl2I8" title="Mandato de Mobilidade" />
-                        
-                        <div className="flex flex-col md:flex-row gap-12 items-center my-16">
-                            <div className="flex-1 space-y-10">
-                                <div className="flex gap-6">
-                                    <div className="bg-soft-blue p-4 rounded-2xl h-fit text-magic-blue shadow-sm"><Zap size={28} /></div>
-                                    <div>
-                                        <h3 className="font-orbitron text-xl font-bold text-cosmic mb-2">Continuidade Operacional</h3>
-                                        <p className="text-slate-600 font-light">Imprevistos acontecem, mas a paralisação é opcional. Garantimos carro reserva e assistência ágil para você seguir em frente.</p>
+                    <SectionWrapper id="auto" title="Seguro Auto & Frota" subtitle="Sua liberdade de ir e vir, sempre protegida.">
+                        <div className="grid md:grid-cols-2 gap-12 items-center">
+                            <div className="md:order-first order-last">
+                                <BannerGenerator 
+                                    title="Seguro Auto" 
+                                    image="https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?q=80&w=2883&auto=format&fit=crop"
+                                />
+                            </div>
+                            <div className="space-y-6 text-lg text-slate-600 leading-relaxed">
+                                <p>
+                                    O trânsito é imprevisível, mas sua segurança não pode ser. Com a ConsegSeguro, você tem a certeza de resolução rápida para qualquer incidente, seja um pequeno reparo ou um sinistro complexo.
+                                </p>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all">
+                                        <h4 className="font-bold text-trust-blue flex items-center gap-2 mb-1"><AlertTriangle size={16}/> Assistência 24h</h4>
+                                        <p className="text-sm text-slate-500">Guincho e socorro mecânico em todo território nacional.</p>
+                                    </div>
+                                    <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all">
+                                        <h4 className="font-bold text-trust-blue flex items-center gap-2 mb-1"><Car size={16}/> Carro Reserva</h4>
+                                        <p className="text-sm text-slate-500">Sua rotina não para enquanto cuidamos do seu veículo.</p>
+                                    </div>
+                                    <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all">
+                                        <h4 className="font-bold text-trust-blue flex items-center gap-2 mb-1"><ShieldCheck size={16}/> Danos a Terceiros</h4>
+                                        <p className="text-sm text-slate-500">Proteção jurídica e financeira em acidentes com terceiros.</p>
+                                    </div>
+                                    <div className="bg-white p-4 rounded-xl border border-slate-100 shadow-sm hover:shadow-md transition-all">
+                                        <h4 className="font-bold text-trust-blue flex items-center gap-2 mb-1"><Briefcase size={16}/> Gestão de Frotas</h4>
+                                        <p className="text-sm text-slate-500">Condições exclusivas para blindar o patrimônio da sua empresa.</p>
                                     </div>
                                 </div>
-                                <div className="flex gap-6">
-                                    <div className="bg-soft-blue p-4 rounded-2xl h-fit text-magic-blue shadow-sm"><Shield size={28} /></div>
-                                    <div>
-                                        <h3 className="font-orbitron text-xl font-bold text-cosmic mb-2">Blindagem Jurídica</h3>
-                                        <p className="text-slate-600 font-light">Acidentes podem gerar passivos enormes. Nosso escudo de responsabilidade civil protege suas reservas financeiras.</p>
-                                    </div>
+                                <div className="pt-6 flex justify-center md:justify-start">
+                                    <Button onClick={() => updateRoute('contato')} className="w-full sm:w-auto">
+                                        Solicitar Cotação Auto
+                                    </Button>
                                 </div>
                             </div>
-                            <div className="flex-1 bg-white border border-slate-100 p-8 rounded-3xl shadow-xl relative overflow-hidden">
-                                <div className="absolute top-0 left-0 w-1 h-full bg-magic-blue"></div>
-                                <h3 className="font-orbitron text-2xl font-bold mb-6 text-cosmic">Cobertura Elite</h3>
-                                <ul className="space-y-5">
-                                    {['Colisão, Roubo e Furto', 'Danos a Terceiros (RCF-V)', 'Assistência 24h Premium', 'Proteção de Vidros Completa'].map((item, i) => (
-                                        <li key={i} className="flex items-center text-slate-600">
-                                            <div className="w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center mr-3 text-xs">✓</div> 
-                                            {item}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
                         </div>
-
-                        <div className="flex justify-center text-center">
-                             <Button disabled variant="secondary" className="opacity-70 cursor-not-allowed px-12 w-full md:w-auto">Sistema em Atualização</Button>
-                        </div>
+                        {renderLogos()}
                     </SectionWrapper>
                 );
 
             case 'saude':
+                const whatsappMessage = encodeURIComponent("Olá, preciso de um plano de saúde individual ou PME.");
+                const whatsappLink = `https://wa.me/5561999949724?text=${whatsappMessage}`;
+
                 return (
-                    <SectionWrapper 
-                        id="saude" 
-                        title="Escudo do Capital Humano" 
-                        subtitle="Você é o ativo mais valioso do seu império. Cuidar da sua saúde e da sua família é a estratégia mais inteligente de todas."
-                    >
-                        <FloatingWhatsApp />
-                        <VideoPlayer videoId="5r8arWpALhY" title="Seguro Saúde" />
+                    <SectionWrapper id="saude" title="Planos de Saúde" subtitle="Medicina de Ponta & Rede Premium.">
+                        <div className="grid md:grid-cols-2 gap-12 items-center mb-16">
+                            <div className="space-y-6">
+                                <p className="text-lg text-slate-600 leading-relaxed">
+                                    Em momentos críticos, o acesso rápido aos melhores hospitais e especialistas faz toda a diferença. Um plano de saúde bem estruturado é o <strong>"cinto de segurança"</strong> da sua vida e o benefício mais valorizado por colaboradores.
+                                </p>
+                                
+                                <ul className="space-y-4 my-6">
+                                    <li className="flex items-start gap-3 text-slate-700">
+                                        <CheckCircle className="text-trust-blue mt-1 flex-shrink-0" size={20}/>
+                                        <span><strong>Rede Credenciada Premium:</strong> Acesso aos hospitais de referência (Sírio-Libanês, Einstein).</span>
+                                    </li>
+                                    <li className="flex items-start gap-3 text-slate-700">
+                                        <CheckCircle className="text-trust-blue mt-1 flex-shrink-0" size={20}/>
+                                        <span><strong>Reembolso Ágil:</strong> Liberdade para escolher seus médicos de confiança fora da rede.</span>
+                                    </li>
+                                    <li className="flex items-start gap-3 text-slate-700">
+                                        <CheckCircle className="text-trust-blue mt-1 flex-shrink-0" size={20}/>
+                                        <span><strong>Gestão PME:</strong> Planos empresariais com redução de custos e isenção de carência (conforme regras).</span>
+                                    </li>
+                                </ul>
+
+                                <div className="pt-4">
+                                    <Button onClick={() => window.open(whatsappLink, '_blank')} className="w-full sm:w-auto shadow-2xl flex items-center gap-2">
+                                        <MessageCircle size={20} /> Falar com Especialista Saúde
+                                    </Button>
+                                    <p className="text-xs text-slate-400 mt-2">Atendimento direto via WhatsApp para cotação personalizada.</p>
+                                </div>
+                            </div>
+                            
+                            <div className="relative">
+                                <BannerGenerator 
+                                    title="Saúde & Bem-estar" 
+                                    image="https://images.unsplash.com/photo-1504813184591-01572f98c85f?q=80&w=2070&auto=format&fit=crop"
+                                    className="aspect-[4/3] shadow-2xl"
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid md:grid-cols-3 gap-6 mb-12">
+                            <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 text-center group hover:border-trust-blue transition-all duration-300">
+                                <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-trust-blue mx-auto mb-6 group-hover:scale-110 transition-transform">
+                                    <Stethoscope size={32} />
+                                </div>
+                                <h3 className="font-serif font-bold text-xl mb-3 text-trust-blue">Individual e Familiar</h3>
+                                <p className="text-sm text-slate-500 leading-relaxed">
+                                    Proteção completa para você e sua família com cobertura nacional e acomodação em apartamento.
+                                </p>
+                            </div>
+
+                            <div className="bg-trust-blue p-8 rounded-3xl shadow-premium text-center relative overflow-hidden group transform hover:-translate-y-2 transition-all duration-300">
+                                <div className="absolute top-0 right-0 bg-warm-gold text-white text-[10px] font-bold px-3 py-1 rounded-bl-lg">MAIS PROCURADO</div>
+                                <div className="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center text-white mx-auto mb-6 backdrop-blur-sm group-hover:scale-110 transition-transform">
+                                    <Building2 size={32} />
+                                </div>
+                                <h3 className="font-serif font-bold text-xl mb-3 text-white">Empresarial (PME)</h3>
+                                <p className="text-sm text-blue-100 leading-relaxed mb-4">
+                                    Use seu CNPJ (a partir de 2 vidas) para contratar planos até 40% mais econômicos que o individual.
+                                </p>
+                            </div>
+
+                            <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 text-center group hover:border-trust-blue transition-all duration-300">
+                                <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center text-trust-blue mx-auto mb-6 group-hover:scale-110 transition-transform">
+                                    <Star size={32} />
+                                </div>
+                                <h3 className="font-serif font-bold text-xl mb-3 text-trust-blue">Linha Black/Premium</h3>
+                                <p className="text-sm text-slate-500 leading-relaxed">
+                                    Coberturas internacionais, check-up executivo anual e os maiores múltiplos de reembolso do mercado.
+                                </p>
+                            </div>
+                        </div>
                         
-                        <div className="grid md:grid-cols-2 gap-8 my-12">
-                            <div className="bg-white p-10 rounded-3xl border border-slate-100 shadow-lg hover:border-magic-blue/30 transition-all">
-                                <h3 className="font-orbitron text-2xl text-cosmic mb-4">Performance & Vitalidade</h3>
-                                <p className="text-slate-600 font-light leading-relaxed">Para liderar, você precisa estar no seu auge. Oferecemos acesso à medicina preventiva e curativa de ponta para manter sua alta performance.</p>
-                            </div>
-                            <div className="bg-white p-10 rounded-3xl border border-slate-100 shadow-lg hover:border-magic-blue/30 transition-all">
-                                <h3 className="font-orbitron text-2xl text-cosmic mb-4">Rede de Excelência</h3>
-                                <p className="text-slate-600 font-light leading-relaxed">Nos momentos críticos, você merece o melhor. Acesso desburocratizado aos hospitais e especialistas de elite (Einstein, Sírio, Vila Nova).</p>
-                            </div>
-                        </div>
-                        <div className="flex justify-center text-center">
-                            <Button disabled variant="secondary" className="opacity-70 cursor-not-allowed px-12 w-full md:w-auto">Sistema em Atualização</Button>
-                        </div>
+                        {renderLogos()}
                     </SectionWrapper>
                 );
 
             case 'consorcio':
                 return (
-                    <SectionWrapper 
-                        id="consorcio" 
-                        title="Aquisição Estratégica" 
-                        subtitle="O sistema inteligente para quem pensa a longo prazo. Expanda seu patrimônio com planejamento, sem pagar o preço da impaciência."
-                    >
-                        <FloatingWhatsApp />
-                        <VideoPlayer videoId="nckxl3HMtcY" title="Consórcio Estratégico" />
-                        
-                        {/* A Matemática da Prosperidade */}
-                        <div className="max-w-5xl mx-auto bg-white p-10 rounded-3xl shadow-xl border border-slate-100 mt-16 mb-12 relative overflow-hidden">
-                             <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-magic-blue to-power-blue"></div>
-                            <h3 className="font-orbitron text-center text-2xl text-cosmic mb-10">A Matemática da Prosperidade</h3>
-                            <div className="grid md:grid-cols-3 gap-10 text-center">
-                                <div className="p-4">
-                                    <div className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-magic-blue to-power-blue mb-3">0%</div>
-                                    <div className="font-bold text-cosmic text-lg">Juros</div>
-                                    <div className="text-slate-500 mt-2 font-light">Fuja das taxas abusivas. Pague apenas a taxa administrativa justa.</div>
-                                </div>
-                                <div className="p-4 md:border-x border-slate-100">
-                                    <div className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-magic-blue to-power-blue mb-3">100%</div>
-                                    <div className="font-bold text-cosmic text-lg">Planejado</div>
-                                    <div className="text-slate-500 mt-2 font-light">Previsibilidade total de fluxo de caixa para sua empresa ou família.</div>
-                                </div>
-                                <div className="p-4">
-                                    <div className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-br from-magic-blue to-power-blue mb-3">∞</div>
-                                    <div className="font-bold text-cosmic text-lg">Potencial</div>
-                                    <div className="text-slate-500 mt-2 font-light">Use a carta contemplada para negociar à vista e alavancar ativos.</div>
-                                </div>
+                    <SectionWrapper id="consorcio" title="Consórcio Inteligente" subtitle="Construa patrimônio sem pagar juros.">
+                        <div className="grid md:grid-cols-2 gap-12 items-center">
+                             <div className="md:order-first order-last">
+                                <BannerGenerator 
+                                    title="Consórcio" 
+                                    image="https://images.unsplash.com/photo-1564013799919-ab600027ffc6?q=80&w=2070&auto=format&fit=crop"
+                                />
                             </div>
-                        </div>
-
-                        {/* O Que Nosso Sistema Possui - UPDATED GLOW */}
-                        <div className="max-w-6xl mx-auto mb-16">
-                            <h3 className="font-orbitron text-center text-2xl text-cosmic mb-10">Arsenal do Sistema</h3>
-                            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                                {[
-                                    { icon: <BarChart3 size={24} />, title: "Alavancagem Inteligente", text: "Acelere sua contemplação sem usar seu próprio capital. Utilize até 30% da própria carta de crédito como lance (Lance Embutido)." },
-                                    { icon: <Wallet size={24} />, title: "Poder de Negociação", text: "A carta contemplada é dinheiro à vista na mesa de negociação. Isso lhe confere o poder de barganha para exigir descontos agressivos." },
-                                    { icon: <Shield size={24} />, title: "Blindagem Inflacionária", text: "Seu poder de compra é sagrado. O valor da carta de crédito é reajustado anualmente, garantindo que a inflação não corroa seu patrimônio." },
-                                    { icon: <Target size={24} />, title: "Liberdade de Escolha", text: "Não fique preso a catálogos. Com a carta na mão, você tem liberdade absoluta para escolher imóveis ou veículos em qualquer lugar." }
-                                ].map((card, i) => (
-                                    <div key={i} className="relative overflow-hidden bg-slate-50 p-6 rounded-2xl border border-slate-100 
-                                        hover:bg-white hover:border-magic-blue/50 hover:shadow-[0_0_40px_rgba(0,191,255,0.4)] 
-                                        hover:-translate-y-2 transition-all duration-500 group">
-                                        
-                                        {/* Inner Glow Effect */}
-                                        <div className="absolute inset-0 bg-gradient-to-b from-magic-blue/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
-                                        <div className="absolute -top-10 -right-10 w-20 h-20 bg-magic-blue/20 blur-2xl group-hover:bg-magic-blue/40 transition-colors duration-500 rounded-full"></div>
-                                        
-                                        <div className="relative z-10">
-                                            <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-magic-blue mb-4 group-hover:scale-110 group-hover:shadow-[0_0_15px_rgba(0,191,255,0.5)] transition-all duration-500">
-                                                {card.icon}
-                                            </div>
-                                            <h4 className="font-orbitron text-sm font-bold text-cosmic mb-2 group-hover:text-magic-blue transition-colors">{card.title}</h4>
-                                            <p className="text-sm text-slate-500 leading-relaxed">{card.text}</p>
+                            <div className="space-y-6 text-lg text-slate-600 leading-relaxed">
+                                <h3 className="text-2xl font-bold text-trust-blue">Por que investir via consórcio?</h3>
+                                <p>
+                                    É a ferramenta financeira mais sofisticada para quem planeja. Você adquire bens de alto valor pagando apenas uma taxa administrativa, fugindo dos juros compostos do financiamento bancário.
+                                </p>
+                                <div className="space-y-3">
+                                    <div className="flex items-center gap-3 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                                        <Home className="text-trust-blue" size={28}/>
+                                        <div>
+                                            <strong className="block text-slate-800">Imóveis e Construção</strong>
+                                            <span className="text-sm text-slate-500">Saia do aluguel, compre terrenos ou construa sua casa.</span>
                                         </div>
                                     </div>
-                                ))}
+                                    <div className="flex items-center gap-3 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                                        <Car className="text-trust-blue" size={28}/>
+                                        <div>
+                                            <strong className="block text-slate-800">Veículos e Pesados</strong>
+                                            <span className="text-sm text-slate-500">Carros, motos e caminhões sem entrada e sem juros.</span>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center gap-3 bg-white p-4 rounded-xl border border-slate-100 shadow-sm">
+                                        <Briefcase className="text-trust-blue" size={28}/>
+                                        <div>
+                                            <strong className="block text-slate-800">Serviços</strong>
+                                            <span className="text-sm text-slate-500">Reformas, viagens e procedimentos estéticos.</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="pt-6 flex justify-center md:justify-start">
+                                    <Button onClick={() => window.open(LINK_SISTEMA_CONSORCIO, '_blank')} className="w-full sm:w-auto shadow-2xl">
+                                        Simular Consórcio <ExternalLink size={18} className="ml-2"/>
+                                    </Button>
+                                </div>
+                                <p className="text-xs text-slate-400 mt-2 text-center md:text-left">Acesso ao simulador oficial Conseg.</p>
                             </div>
-                        </div>
-                        
-                        <div className="text-center flex flex-col items-center gap-4">
-                            <Button onClick={() => window.open('https://consorcio.consegseguro.com/', '_blank')}>
-                                Acessar Sistema de Aquisição
-                            </Button>
-                            <p className="text-sm text-slate-400">Simulação em tempo real diretamente no nosso sistema estratégico.</p>
                         </div>
                     </SectionWrapper>
                 );
 
-            case 'filosofia':
+            case 'sobre':
                 return (
-                    <div className="animate-fade-in">
-                        <SectionWrapper id="filosofia" title="Manifesto" subtitle="Soberania através da Segurança">
-                            <FloatingWhatsApp />
-                            <div className="max-w-4xl mx-auto prose prose-lg text-slate-600">
-                                <div className="bg-white p-12 rounded-3xl shadow-sm border border-slate-100 mb-12 relative overflow-hidden">
-                                    <div className="absolute top-0 right-0 w-64 h-64 bg-magic-blue/5 rounded-full blur-3xl pointer-events-none"></div>
-                                    <p className="text-3xl font-light leading-relaxed mb-12 text-center text-cosmic font-orbitron">
-                                        "A segurança não é o medo do erro. <br/>É a liberdade absoluta para o acerto."
-                                    </p>
-                                    <p className="mb-8 leading-relaxed text-lg">
-                                        O mundo ensina que seguro é uma despesa para "se der errado". Uma obrigação chata. Um escudo reativo contra o azar.
-                                        <strong className="text-magic-blue"> Nós rejeitamos essa visão pequena.</strong>
-                                    </p>
-                                    <p className="mb-8 leading-relaxed text-lg">
-                                        Para nós, a proteção é a <span className="text-cosmic font-bold">ferramenta ofensiva mais poderosa</span> do seu arsenal. Pense: como você agiria se soubesse que, aconteça o que acontecer, sua base está sólida? Se sua família está garantida? Se seu patrimônio é inabalável?
-                                    </p>
-                                    <p className="mb-2 leading-relaxed text-center font-bold text-xl text-slate-800">
-                                        Você agiria com ousadia. Com coragem. Sem hesitação.
-                                    </p>
-                                </div>
-
-                                {/* OS 4 SISTEMAS - NOVO CONTEÚDO */}
-                                <div className="mb-24">
-                                    <h3 className="font-orbitron text-center text-2xl text-cosmic mb-10 font-bold relative inline-block w-full">
-                                        Pilares da Soberania
-                                        <span className="block w-16 h-1 bg-magic-blue mx-auto mt-4 rounded-full shadow-glow"></span>
-                                    </h3>
-                                    
-                                    <div className="grid md:grid-cols-2 gap-6 not-prose">
-                                        {/* Card 1: Legado */}
-                                        <div className="p-8 bg-slate-50 rounded-2xl border border-slate-200 hover:border-rose-500/50 hover:shadow-[0_0_30px_rgba(244,63,94,0.2)] transition-all duration-500 group cursor-pointer hover:-translate-y-1" onClick={() => updateRoute('legado')}>
-                                            <Crown className="w-10 h-10 text-rose-500 mb-4 group-hover:scale-110 transition-transform" />
-                                            <h4 className="font-orbitron font-bold text-xl text-cosmic mb-2 group-hover:text-rose-600 transition-colors">Sistema Legado</h4>
-                                            <p className="text-slate-600 font-light leading-relaxed">A soberania sobre o tempo. Garantir que sua construção financeira atravesse gerações sem ser dilapidada por burocracias.</p>
-                                        </div>
-
-                                        {/* Card 2: Mobilidade */}
-                                        <div className="p-8 bg-slate-50 rounded-2xl border border-slate-200 hover:border-amber-500/50 hover:shadow-[0_0_30px_rgba(245,158,11,0.2)] transition-all duration-500 group cursor-pointer hover:-translate-y-1" onClick={() => updateRoute('mobilidade')}>
-                                            <Zap className="w-10 h-10 text-amber-500 mb-4 group-hover:scale-110 transition-transform" />
-                                            <h4 className="font-orbitron font-bold text-xl text-cosmic mb-2 group-hover:text-amber-600 transition-colors">Sistema Mobilidade</h4>
-                                            <p className="text-slate-600 font-light leading-relaxed">A soberania sobre o movimento. Eliminar o risco de paralisação operacional em sua frota ou deslocamento pessoal.</p>
-                                        </div>
-
-                                         {/* Card 3: Expansão */}
-                                         <div className="p-8 bg-slate-50 rounded-2xl border border-slate-200 hover:border-emerald-500/50 hover:shadow-[0_0_30px_rgba(16,185,129,0.2)] transition-all duration-500 group cursor-pointer hover:-translate-y-1" onClick={() => updateRoute('consorcio')}>
-                                            <TrendingUp className="w-10 h-10 text-emerald-500 mb-4 group-hover:scale-110 transition-transform" />
-                                            <h4 className="font-orbitron font-bold text-xl text-cosmic mb-2 group-hover:text-emerald-600 transition-colors">Sistema Expansão</h4>
-                                            <p className="text-slate-600 font-light leading-relaxed">A soberania sobre o capital. Alavancagem patrimonial matemática, sem o custo de oportunidade dos juros bancários.</p>
-                                        </div>
-
-                                        {/* Card 4: Humana */}
-                                        <div className="p-8 bg-slate-50 rounded-2xl border border-slate-200 hover:border-magic-blue/50 hover:shadow-[0_0_30px_rgba(0,191,255,0.2)] transition-all duration-500 group cursor-pointer hover:-translate-y-1" onClick={() => updateRoute('saude')}>
-                                            <Activity className="w-10 h-10 text-magic-blue mb-4 group-hover:scale-110 transition-transform" />
-                                            <h4 className="font-orbitron font-bold text-xl text-cosmic mb-2 group-hover:text-magic-blue transition-colors">Sistema Humano</h4>
-                                            <p className="text-slate-600 font-light leading-relaxed">A soberania biológica. Acesso irrestrito à melhor tecnologia médica para manter a máquina principal em performance máxima.</p>
-                                        </div>
+                    <SectionWrapper id="sobre" title="Quem Somos" subtitle="Compromisso com a sua história.">
+                        <div className="max-w-4xl mx-auto">
+                            <BannerGenerator 
+                                title="Nossa Trajetória" 
+                                image="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=2070&auto=format&fit=crop"
+                                className="aspect-[21/9] mb-12 shadow-2xl"
+                            />
+                            <div className="bg-white p-8 md:p-12 rounded-3xl shadow-premium border border-slate-100 text-center">
+                                <p className="text-xl text-slate-600 leading-relaxed mb-8">
+                                    A ConsegSeguro atua <strong>desde 1991</strong> com uma missão clara: oferecer <strong>tranquilidade real</strong>. Não vendemos apenas apólices, entregamos a certeza de que, nos momentos mais delicados, você não estará sozinho.
+                                </p>
+                                <p className="text-xl text-slate-600 leading-relaxed mb-8">
+                                    Combinamos a tradição de uma corretora que conhece cada cliente pelo nome com a agilidade da tecnologia moderna. Brigamos pelos seus direitos e garantimos que sua proteção seja efetiva.
+                                </p>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12 pt-12 border-t border-slate-100">
+                                    <div>
+                                        <h4 className="text-4xl font-serif font-bold text-trust-blue mb-2">1991</h4>
+                                        <p className="text-sm text-slate-400 uppercase tracking-widest">Ano de Fundação</p>
                                     </div>
-                                </div>
-
-                                {/* Seção: Visão de Futuro / Predição */}
-                                <div className="bg-[#020617] text-white p-12 rounded-3xl relative overflow-hidden not-prose shadow-glow-strong border border-magic-blue/20">
-                                    <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-magic-blue/10 rounded-full blur-[80px] animate-pulse"></div>
-                                    <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-purple-500/10 rounded-full blur-[60px]"></div>
-                                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-                                    
-                                    <div className="relative z-10 text-center">
-                                        <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full bg-white/10 border border-white/20 text-[10px] font-orbitron font-bold tracking-widest mb-6">
-                                            <BrainCircuit size={14} className="text-magic-blue" /> HORIZONTE 2030
-                                        </div>
-                                        <h3 className="font-orbitron text-3xl sm:text-4xl font-black mb-6">O Futuro é <span className="text-transparent bg-clip-text bg-gradient-to-r from-magic-blue to-electric-blue">Preditivo</span></h3>
-                                        <p className="text-slate-300 leading-relaxed max-w-2xl mx-auto mb-8 font-light text-lg">
-                                            O modelo antigo de seguros reage ao desastre. <strong className="text-white">Nós estamos construindo o modelo que o impede.</strong> Utilizando Big Data e IA, nossa visão é antecipar riscos à sua saúde e ao seu patrimônio antes que eles se materializem.
-                                        </p>
+                                    <div>
+                                        <h4 className="text-4xl font-serif font-bold text-trust-blue mb-2">+5k</h4>
+                                        <p className="text-sm text-slate-400 uppercase tracking-widest">Vidas e Bens Protegidos</p>
+                                    </div>
+                                    <div>
+                                        <h4 className="text-4xl font-serif font-bold text-trust-blue mb-2">100%</h4>
+                                        <p className="text-sm text-slate-400 uppercase tracking-widest">Dedicação ao Cliente</p>
                                     </div>
                                 </div>
                             </div>
-
-                            {/* Seção de Parceiros Estratégicos (Logos Reais) */}
-                            <div className="pt-24 bg-white">
-                                <div className="max-w-7xl mx-auto px-4">
-                                    <h3 className="font-orbitron text-2xl text-center text-cosmic mb-4 font-bold relative inline-block w-full">
-                                        Ecossistema de Elite
-                                        <span className="block w-16 h-1 bg-magic-blue mx-auto mt-4 rounded-full shadow-glow"></span>
-                                    </h3>
-                                    <p className="text-center text-slate-500 mb-12 font-light max-w-2xl mx-auto leading-relaxed">
-                                        Nossa operação é alicerçada pelos maiores conglomerados do mundo. Solidez global garantindo sua tranquilidade local.
-                                    </p>
-                                    
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-8 items-center justify-items-center grayscale hover:grayscale-0 transition-all duration-500">
-                                        {[
-                                            { name: "Porto Seguro", domain: "portoseguro.com.br" },
-                                            { name: "Allianz", domain: "allianz.com.br" },
-                                            { name: "Bradesco", domain: "bradescoseguros.com.br" },
-                                            { name: "SulAmérica", domain: "sulamerica.com.br" },
-                                            { name: "Mapfre", domain: "mapfre.com.br" },
-                                            { name: "Zurich", domain: "zurich.com.br" },
-                                            { name: "Tokio Marine", domain: "tokiomarine.com.br" },
-                                            { name: "HDI", domain: "hdiseguros.com.br" },
-                                            { name: "Amil", domain: "amil.com.br" },
-                                            { name: "Omint", domain: "omint.com.br" },
-                                            { name: "Suhai", domain: "suhai.com.br" },
-                                            { name: "Azul", domain: "azulseguros.com.br" }
-                                        ].map((partner, idx) => (
-                                            <div key={idx} className="w-32 h-16 flex items-center justify-center opacity-60 hover:opacity-100 transition-opacity duration-300 p-2">
-                                                <img 
-                                                    src={`https://logo.clearbit.com/${partner.domain}?size=120`} 
-                                                    alt={partner.name}
-                                                    loading="lazy"
-                                                    decoding="async"
-                                                    width="120"
-                                                    height="60"
-                                                    className="max-h-full max-w-full object-contain filter drop-shadow-sm"
-                                                    onError={(e) => {
-                                                        (e.target as HTMLImageElement).style.display = 'none';
-                                                        (e.target as HTMLImageElement).nextElementSibling?.classList.remove('hidden');
-                                                    }}
-                                                />
-                                                <span className="hidden font-orbitron font-bold text-xs text-slate-400 uppercase">{partner.name}</span>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        </SectionWrapper>
-                    </div>
+                            {renderLogos()}
+                        </div>
+                    </SectionWrapper>
                 );
 
             case 'contato':
                 return (
-                    <SectionWrapper id="contato" title="Inicie Sua Estratégia" subtitle="O sistema está pronto para receber seus dados.">
-                        <FloatingWhatsApp />
-                        <div className="max-w-4xl mx-auto min-h-[60vh] flex flex-col justify-center">
-                            <NeuralDiagnostic onComplete={(systemId) => setActiveSystem(systemId)} />
+                    <SectionWrapper id="contato" title="Fale Conosco" subtitle="Nossos especialistas estão prontos para ouvir você.">
+                         <div className="max-w-3xl mx-auto">
+                            <ContactForm initialProduct="" />
+                            <div className="mt-12 grid md:grid-cols-3 gap-6 text-center">
+                                <div onClick={() => window.open(CONTACT_WHATSAPP_LINK, '_blank')} className="p-6 bg-white rounded-xl shadow-sm border border-slate-100 cursor-pointer hover:shadow-md transition-all">
+                                    <Phone className="mx-auto text-trust-blue mb-3" size={24} />
+                                    <h4 className="font-bold text-trust-blue mb-2">WhatsApp / Telefone</h4>
+                                    <p className="text-slate-600 text-sm hover:text-trust-blue">{CONTACT_PHONE_DISPLAY}</p>
+                                </div>
+                                <div className="p-6 bg-white rounded-xl shadow-sm border border-slate-100">
+                                    <Send className="mx-auto text-trust-blue mb-3" size={24} />
+                                    <h4 className="font-bold text-trust-blue mb-2">E-mail</h4>
+                                    <p className="text-slate-600 text-sm">{CONTACT_EMAIL}</p>
+                                </div>
+                                <div className="p-6 bg-white rounded-xl shadow-sm border border-slate-100">
+                                    <Home className="mx-auto text-trust-blue mb-3" size={24} />
+                                    <h4 className="font-bold text-trust-blue mb-2">Endereço</h4>
+                                    <p className="text-slate-600 text-sm px-4">{CONTACT_ADDRESS}</p>
+                                </div>
+                            </div>
                         </div>
                     </SectionWrapper>
                 );
-
-            case 'login':
-                return (
-                    <Login onLoginSuccess={(email) => {
-                        setIsAuthenticated(true);
-                         if (email === 'Consegcn@terra.com.br' || email.startsWith('admin')) {
-                            setUserRole('admin');
-                        } else {
-                            setUserRole('broker');
-                        }
-                        updateRoute('dashboard');
-                    }} />
-                );
-
-            case 'dashboard':
-                if (isAuthLoading) {
-                    return (
-                        <div className="min-h-screen flex items-center justify-center bg-slate-50">
-                            <div className="w-12 h-12 border-4 border-magic-blue border-t-transparent rounded-full animate-spin"></div>
-                        </div>
-                    );
-                }
-
-                if (user || isAuthenticated) {
-                    return (
-                        <BrokerDashboard 
-                            onLogout={() => {
-                                setUser(null);
-                                setIsAuthenticated(false);
-                                setUserRole('broker'); // Reset role
-                                updateRoute('login');
-                            }} 
-                            userRole={userRole}
-                        />
-                    );
-                }
-                // Redirecionar se não logado
-                setTimeout(() => updateRoute('login'), 0);
-                return null;
-
+            
             default:
-                return (
-                     <div className="min-h-[60vh] flex flex-col items-center justify-center bg-white">
-                        <h1 className="text-6xl font-orbitron text-cosmic mb-4">404</h1>
-                        <p className="text-slate-600 mb-8 font-light text-xl">Rota não mapeada.</p>
-                        <Button onClick={() => updateRoute('inicio')}>Retornar à Base</Button>
-                    </div>
-                );
+                return null;
         }
     };
 
     return (
-        <div className="min-h-screen bg-white font-inter text-slate-800 selection:bg-magic-blue selection:text-white">
+        <div className="min-h-screen bg-[#F8FAFC] text-slate-800 font-inter selection:bg-trust-blue selection:text-white">
             <Navigation currentRoute={currentRoute} onNavigate={updateRoute} />
             
-            <main className={currentRoute === 'dashboard' ? '' : ''}>
+            <main>
                 {renderContent()}
             </main>
 
-            {/* Ocultar rodapé se estiver no dashboard */}
-            {currentRoute !== 'dashboard' && (
-                <footer className="bg-white border-t border-slate-100 mt-20 py-16 relative overflow-hidden">
-                    <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>
-                    <div className="max-w-7xl mx-auto px-4 text-center relative z-10">
-                        <p className="font-orbitron text-2xl font-bold text-cosmic mb-6">ConsegSeguro</p>
-                        <p className="text-slate-500 text-sm max-w-md mx-auto leading-relaxed font-light">
-                            © 2025. Todos os direitos reservados.<br/>
-                            A segurança é o alicerce da sua soberania.
-                        </p>
-                        <div className="flex justify-center gap-8 mt-10 text-slate-400">
-                            <Mail size={24} className="hover:text-magic-blue cursor-pointer transition-colors hover:scale-110 duration-300" />
-                            <Lock size={24} className="hover:text-magic-blue cursor-pointer transition-colors hover:scale-110 duration-300" />
+            {/* Footer */}
+            <footer className="bg-trust-blue text-white py-12 border-t border-white/10">
+                <div className="container mx-auto px-4">
+                    <div className="grid md:grid-cols-4 gap-8 mb-8">
+                        <div className="col-span-1 md:col-span-2">
+                            <h3 className="font-serif text-2xl font-bold mb-4">Conseg<span className="text-warm-gold">Seguro</span></h3>
+                            <p className="text-blue-200 text-sm leading-relaxed max-w-md">
+                                Sua corretora de confiança desde 1991. Protegemos o que você conquistou com seriedade e transparência.
+                            </p>
+                            <div className="mt-6 text-blue-200 text-sm space-y-2">
+                                <p className="flex items-center gap-2"><Phone size={14} /> {CONTACT_PHONE_DISPLAY}</p>
+                                <p className="flex items-center gap-2"><Send size={14} /> {CONTACT_EMAIL}</p>
+                                <p className="flex items-start gap-2"><Home size={14} className="mt-1 flex-shrink-0" /> {CONTACT_ADDRESS}</p>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 className="font-bold mb-4">Serviços</h4>
+                            <ul className="space-y-2 text-sm text-blue-200">
+                                <li><button onClick={() => updateRoute('vida')} className="hover:text-white">Seguro de Vida</button></li>
+                                <li><button onClick={() => updateRoute('auto')} className="hover:text-white">Seguro Auto</button></li>
+                                <li><button onClick={() => updateRoute('saude')} className="hover:text-white">Planos de Saúde</button></li>
+                                <li><button onClick={() => updateRoute('consorcio')} className="hover:text-white">Consórcios</button></li>
+                            </ul>
+                        </div>
+                        <div>
+                            <h4 className="font-bold mb-4">Contato</h4>
+                            <ul className="space-y-2 text-sm text-blue-200">
+                                <li><button onClick={() => window.open(CONTACT_WHATSAPP_LINK, '_blank')} className="hover:text-white">Fale pelo WhatsApp</button></li>
+                                <li><button onClick={() => updateRoute('sobre')} className="hover:text-white">Quem Somos</button></li>
+                                <li><a href={CONTACT_INSTAGRAM} target="_blank" rel="noopener noreferrer" className="hover:text-white flex items-center gap-2"><Instagram size={14}/> Instagram</a></li>
+                            </ul>
                         </div>
                     </div>
-                </footer>
-            )}
+                    <div className="pt-8 border-t border-white/10 text-center text-xs text-blue-300">
+                        &copy; {new Date().getFullYear()} ConsegSeguro Corretora. Todos os direitos reservados.
+                    </div>
+                </div>
+            </footer>
+
+            <SentinelChat onNavigate={updateRoute} />
         </div>
     );
-};
+}
 
 export default App;

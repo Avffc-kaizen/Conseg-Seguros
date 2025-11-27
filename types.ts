@@ -18,6 +18,6 @@ export interface LeadData {
     content_name: string;
 }
 
-export type RouteName = 'inicio' | 'legado' | 'mobilidade' | 'saude' | 'consorcio' | 'filosofia' | 'contato' | 'login' | 'dashboard';
+export type RouteName = 'inicio' | 'vida' | 'auto' | 'saude' | 'consorcio' | 'sobre' | 'contato';
 
 export type UserRole = 'admin' | 'broker';
